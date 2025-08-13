@@ -9,10 +9,10 @@ security data pipelines.
 
 ## Installation
 
-Quick install with uvx:
+Quick run without installation:
 
 ```sh
-uvx --from tenzir-mcp tenzir-mcp
+uv tool run tenzir-mcp
 ```
 
 Or install with pip:
@@ -31,8 +31,8 @@ Add the server to your Claude Desktop app configuration:
 {
   "mcpServers": {
     "tenzir": {
-      "command": "uvx",
-      "args": ["--from", "tenzir-mcp", "tenzir-mcp"]
+      "command": "uv",
+      "args": ["tool", "run", "tenzir-mcp"]
     }
   }
 }
@@ -44,23 +44,13 @@ Use the Claude MCP CLI to add the server:
 
 ```sh
 # For production use (from PyPI)
-claude mcp add tenzir --scope user -- uvx --from tenzir-mcp tenzir-mcp
+claude mcp add tenzir --scope user -- uv tool run tenzir-mcp
 
 # For development (from source)
 claude mcp add tenzir --scope user -- uv run --project $(pwd) tenzir-mcp
 ```
 
 Don't forget to restart Claude after making changes to the server.
-
-## Configuration
-
-```bash
-# Optional: Set Tenzir node endpoint (default: http://localhost:5158)
-export TENZIR_ENDPOINT=http://your-tenzir-node:5158
-
-# Optional: Set API token if authentication is required
-export TENZIR_API_TOKEN=your-api-token
-```
 
 ## Development
 

@@ -11,14 +11,11 @@
 
 There are several ways to run the MCP server from the source tree:
 
-#### Method 1: Using uvx with local path (Quickest for testing)
+#### Method 1: Using uv tool run with local path (Quickest for testing)
 
 ```bash
-# From anywhere, point to your local development directory
-uvx --from /path/to/tenzir-mcp tenzir-mcp --help
-
-# Or from within the project directory
-uvx --from . tenzir-mcp --help
+# From within the project directory
+uv tool run --from . tenzir-mcp --help
 ```
 
 #### Method 2: Using uv run (Recommended for development)
@@ -29,9 +26,6 @@ uv run tenzir-mcp
 
 # Or run the module directly
 uv run python -m tenzir_mcp.server
-
-# With environment variables
-TENZIR_ENDPOINT=http://localhost:5158 uv run tenzir-mcp
 ```
 
 #### Method 3: Install in editable mode
@@ -158,8 +152,8 @@ uv pip install dist/tenzir_mcp-*.whl
 # Test it works
 tenzir-mcp --help
 
-# Test with uvx
-uvx --from dist/tenzir_mcp-*.whl tenzir-mcp --help
+# Test with uv tool run
+uv tool run --from dist/tenzir_mcp-*.whl tenzir-mcp --help
 
 # Clean up
 deactivate
@@ -259,7 +253,7 @@ uv pip install types-requests types-pyyaml
 1. Build and install locally:
 ```bash
 uv build
-uv tool install --from dist/tenzir_mcp-*.whl tenzir-mcp
+uv tool install tenzir-mcp --from dist/tenzir_mcp-*.whl
 ```
 
 2. Configure Claude Desktop:

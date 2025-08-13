@@ -78,4 +78,4 @@ jobs:
     
     - name: Test installation from PyPI
       run: |
-        uvx --from tenzir-mcp tenzir-mcp --help
+        uv tool run tenzir-mcp --help

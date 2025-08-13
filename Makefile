@@ -62,8 +62,8 @@ dev:  ## Run development server
 dev-module:  ## Run as Python module
 	uv run python -m tenzir_mcp.server
 
-verify-install:  ## Verify package installation with uvx
-	uvx --from tenzir-mcp tenzir-mcp --help
+verify-install:  ## Verify package installation with uv tool run
+	uv tool run tenzir-mcp --help
 
 update-schemas:  ## Update OCSF schemas
 	uv run python scripts/download-ocsf-schemas.py

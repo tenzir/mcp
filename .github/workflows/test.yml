@@ -133,4 +133,4 @@ jobs:
     - name: Test uvx installation
       if: matrix.method == 'uvx'
       run: |
-        uvx --from dist/*.whl tenzir-mcp --help
+        uv tool run --from dist/*.whl tenzir-mcp --help

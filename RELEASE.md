@@ -130,7 +130,7 @@ Before each release:
 # Wait a few minutes for PyPI to update, then:
 
 # Install from PyPI
-uvx --from tenzir-mcp tenzir-mcp --version
+uv tool run tenzir-mcp --version
 
 # Verify it's the correct version
 python -c "import tenzir_mcp; print(tenzir_mcp.__version__)"
@@ -221,7 +221,7 @@ If a release has critical issues:
 
 ### Post-release Checklist  
 - [ ] Verify package on PyPI
-- [ ] Test installation with uvx
+- [ ] Test installation with uv tool run
 - [ ] Update any external documentation
 - [ ] Close related GitHub issues
 - [ ] Plan next release milestones
