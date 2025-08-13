@@ -5,7 +5,8 @@
 
 A [Model Context Protocol](https://modelcontextprotocol.io) server for
 [Tenzir](https://tenzir.com) that enables AI assistants to interact with
-security data pipelines.
+security data pipelines and map data to the [Open Cybersecurity Schema
+Framework (OCSF)](https://ocsf.io).
 
 ## Installation
 
