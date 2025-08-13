@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pytest
 
 from tenzir_mcp.server import (
