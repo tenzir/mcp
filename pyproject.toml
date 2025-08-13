@@ -90,9 +90,6 @@ exclude = [
     ".ruff_cache",
 ]
 
-# Include data files in the package
-[tool.hatch.build.targets.wheel.force-include]
-"src/tenzir_mcp/data" = "tenzir_mcp/data"
 
 [tool.black]
 line-length = 88
