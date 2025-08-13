@@ -2,6 +2,22 @@
 
 ## Quick Start
 
+### Common Make Commands
+
+```bash
+make help         # Show all available commands
+make install-dev  # Install with development dependencies
+make dev          # Run development server
+make lint         # Run all linting checks
+make fix          # Auto-fix formatting and linting issues
+make test         # Run tests
+make check        # Run all checks (lint + test)
+make build        # Build distribution packages
+make publish      # Publish to PyPI (runs checks first)
+```
+
+For a complete list of commands, run `make help`.
+
 ### Prerequisites
 
 - Python 3.10 or higher
@@ -9,7 +25,17 @@
 
 ### Running from Source
 
-There are several ways to run the MCP server from the source tree:
+```bash
+# Run the development server
+make dev
+
+# Or run as a Python module
+make dev-module
+```
+
+These commands run the MCP server directly from source.
+
+For more control, there are several ways to run the MCP server:
 
 #### Method 1: Using uv tool run with local path (Quickest for testing)
 
@@ -63,6 +89,18 @@ python src/tenzir_mcp/server.py
 git clone https://github.com/tenzir/mcp
 cd mcp
 
+# Install with development dependencies
+make install-dev
+```
+
+This command handles:
+- Creating a virtual environment (if needed)
+- Installing the package in editable mode
+- Installing all development dependencies
+
+If you need manual control:
+
+```bash
 # Create a virtual environment (optional, uv handles this automatically)
 uv venv
 
@@ -72,7 +110,33 @@ uv pip install -e ".[dev]"
 
 ### Code Quality
 
-We use several tools to maintain code quality:
+Run all code quality checks at once:
+
+```bash
+make lint
+```
+
+This command runs the following tools automatically:
+- **black**: Code formatting check
+- **isort**: Import sorting check
+- **ruff**: Linting and code quality
+- **mypy**: Type checking
+
+To automatically fix formatting and linting issues:
+
+```bash
+make fix
+```
+
+This runs black, isort, and ruff with auto-fix enabled.
+
+To run all checks (formatting, linting, type checking, and tests):
+
+```bash
+make check
+```
+
+If you need to run individual tools:
 
 ```bash
 # Format code with black
@@ -92,15 +156,22 @@ uv run ruff check --fix src/ tests/
 
 # Type checking with mypy
 uv run mypy src/
-
-# Run all checks at once
-make lint
 ```
 
 ### Running Tests
 
+Run all tests:
+
 ```bash
-# Run all tests
+make test
+```
+
+This runs the full test suite with pytest.
+
+For more control over test execution:
+
+```bash
+# Run all tests manually
 uv run pytest
 
 # Run with coverage report
@@ -130,6 +201,15 @@ uv run pytest -m "not slow"
 
 ```bash
 # Build distributions (wheel and sdist)
+make build
+```
+
+This cleans previous builds and creates new distribution packages.
+
+For manual control:
+
+```bash
+# Build distributions (wheel and sdist)
 uv build
 
 # Check the built files
@@ -139,7 +219,42 @@ ls -la dist/
 unzip -l dist/*.whl
 ```
 
+### Publishing to PyPI
+
+```bash
+# Run all checks and publish to PyPI
+make publish
+```
+
+This runs all checks (format, lint, type checking, tests) before publishing. Only proceed if all checks pass.
+
+### Cleaning Up
+
+```bash
+# Clean all build artifacts
+make clean
+```
+
+This removes:
+- `dist/` directory (built packages)
+- `build/` directory
+- `.egg-info` directories
+- `__pycache__` directories
+- `.pyc` and `.pyo` files
+- `.pytest_cache`
+- `.coverage` files
+- `htmlcov/` directory
+
 ### Testing the Built Package
+
+```bash
+# Verify the installation works
+make verify-install
+```
+
+This tests the package installation using `uv tool run`.
+
+For detailed testing:
 
 ```bash
 # Create a test virtual environment
@@ -170,13 +285,18 @@ rm -rf test-env
 
 ### Updating OCSF Schemas
 
-Download latest OCSF schemas:
-
-```sh
-uv run python scripts/download-ocsf-schemas.py
+```bash
+# Download latest OCSF schemas
+make update-schemas
 ```
 
-Verify the downloaded schemas in `src/tenzir_mcp/data/ocsf/`.
+This downloads the latest OCSF schemas to `src/tenzir_mcp/data/ocsf/`.
+
+Manual approach:
+
+```bash
+uv run python scripts/download-ocsf-schemas.py
+```
 
 ### Adding New MCP Tools
 
