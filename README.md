@@ -10,16 +10,37 @@ Framework (OCSF)](https://ocsf.io).
 
 ## Installation
 
-Quick run without installation:
+### Prerequisites
+
+The MCP server requires [Tenzir](https://tenzir.com) to be installed and available in your `$PATH`:
 
 ```sh
-uv tool run tenzir-mcp
+# Check if Tenzir is installed
+tenzir --version
 ```
 
-Or install with pip:
+If not installed, follow the [Tenzir installation guide](https://docs.tenzir.com/installation).
+
+### Install the MCP Server
+
+Install with pip:
 
 ```sh
 pip install tenzir-mcp
+```
+
+Or use uv for automatic dependency management:
+
+```sh
+uv tool install tenzir-mcp
+```
+
+### Quick Test
+
+Run without installation (requires uv):
+
+```sh
+uv tool run tenzir-mcp --help
 ```
 
 ## Usage with Claude
