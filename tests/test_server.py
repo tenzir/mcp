@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from tenzir_mcp.server import (
@@ -17,6 +19,18 @@ get_ocsf_class_fn = get_ocsf_class.fn
 get_ocsf_object_fn = get_ocsf_object.fn
 
 
+def docs_available():
+    """Check if documentation files are available."""
+    try:
+        from tenzir_mcp.docs import TenzirDocs
+        docs = TenzirDocs()
+        # Try to access the docs root
+        return docs.docs_root.exists()
+    except Exception:
+        return False
+
+
+@pytest.mark.skipif(not docs_available(), reason="Documentation files not available")
 class TestDocsTools:
     @pytest.mark.asyncio
     async def test_get_docs_markdown_function(self):
