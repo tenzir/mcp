@@ -21,6 +21,7 @@ def docs_available():
     """Check if documentation files are available."""
     try:
         from tenzir_mcp.docs import TenzirDocs
+
         docs = TenzirDocs()
         # Try to access the docs root
         return docs.docs_root.exists()
