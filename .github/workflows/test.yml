@@ -63,16 +63,7 @@ jobs:
     
     - name: Test with pytest
       run: |
-        uv run pytest --cov=tenzir_mcp --cov-report=xml --cov-report=term-missing
-    
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./coverage.xml
-        flags: unittests
-        name: codecov-${{ matrix.os }}-py${{ matrix.python-version }}
-        fail_ci_if_error: false
-      if: matrix.os == 'ubuntu-latest'
+        uv run pytest --cov=tenzir_mcp --cov-report=term-missing
 
   build:
     name: Build distribution
