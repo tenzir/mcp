@@ -5,6 +5,7 @@
 # ]
 # ///
 
+import os
 import shutil
 import sys
 import tempfile
@@ -33,8 +34,16 @@ def log(*args, **kwargs) -> None:
 def get_latest_commit_sha() -> str:
     """Get the latest commit SHA from the docs repository."""
     log("🔄 Fetching latest commit SHA from tenzir/docs")
+    
+    # Use GitHub token if available (for CI)
+    headers = {}
+    github_token = os.environ.get("GITHUB_TOKEN")
+    if github_token:
+        headers["Authorization"] = f"Bearer {github_token}"
+        log("   Using GitHub token for authentication")
+    
     try:
-        response = requests.get(f"{DOCS_REPO}/commits/main", timeout=TIMEOUT)
+        response = requests.get(f"{DOCS_REPO}/commits/main", headers=headers, timeout=TIMEOUT)
         response.raise_for_status()
         commit_data = response.json()
         sha = commit_data["sha"]
