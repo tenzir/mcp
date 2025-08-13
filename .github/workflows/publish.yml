@@ -32,6 +32,7 @@ jobs:
     
     - name: Check package
       run: |
+        uv venv
         uv pip install check-wheel-contents twine
         uv run check-wheel-contents dist/*.whl
         uv run twine check dist/*
