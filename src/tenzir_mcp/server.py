@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-import os.path
 from importlib import resources
 from typing import Any
 

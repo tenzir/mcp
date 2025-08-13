@@ -2,8 +2,6 @@
 
 import json
 from pathlib import Path
-from typing import Dict, List, Optional, Union
-import importlib.resources as resources
 
 try:
     from importlib.resources import files
@@ -15,7 +13,7 @@ except ImportError:
 class DocsMetadata:
     """Metadata about the bundled documentation."""
 
-    def __init__(self, metadata: Dict[str, str]) -> None:
+    def __init__(self, metadata: dict[str, str]) -> None:
         self.commit_sha = metadata.get("commit_sha", "unknown")
         self.repository = metadata.get("repository", "https://github.com/tenzir/docs")
         self.download_timestamp = metadata.get("download_timestamp", "unknown")
@@ -28,8 +26,8 @@ class TenzirDocs:
     """Access to bundled Tenzir documentation."""
 
     def __init__(self) -> None:
-        self._docs_root: Optional[Path] = None
-        self._metadata: Optional[DocsMetadata] = None
+        self._docs_root: Path | None = None
+        self._metadata: DocsMetadata | None = None
 
     @property
     def docs_root(self) -> Path:
@@ -61,7 +59,7 @@ class TenzirDocs:
                     raise FileNotFoundError(
                         f"Documentation not found at {potential_docs_path}. "
                         "Run 'make update-docs' or rebuild the package."
-                    )
+                    ) from None
 
             if not self._docs_root.exists():
                 raise FileNotFoundError(
@@ -86,12 +84,12 @@ class TenzirDocs:
 
         return self._metadata
 
-    def list_files(self, pattern: str = "**/*") -> List[Path]:
+    def list_files(self, pattern: str = "**/*") -> list[Path]:
         """List all files in the docs matching the given pattern."""
         docs_root = self.docs_root
         return [p for p in docs_root.glob(pattern) if p.is_file()]
 
-    def read_file(self, relative_path: Union[str, Path]) -> str:
+    def read_file(self, relative_path: str | Path) -> str:
         """Read a documentation file by its relative path."""
         file_path = self.docs_root / relative_path
         if not file_path.exists():
@@ -100,18 +98,18 @@ class TenzirDocs:
         with file_path.open("r", encoding="utf-8") as f:
             return f.read()
 
-    def find_files(self, name_pattern: str) -> List[Path]:
+    def find_files(self, name_pattern: str) -> list[Path]:
         """Find files by name pattern (e.g., '*.md', 'index.*')."""
         return [p for p in self.docs_root.rglob(name_pattern) if p.is_file()]
 
-    def get_file_path(self, relative_path: Union[str, Path]) -> Path:
+    def get_file_path(self, relative_path: str | Path) -> Path:
         """Get the absolute path to a documentation file."""
         file_path = self.docs_root / relative_path
         if not file_path.exists():
             raise FileNotFoundError(f"Documentation file not found: {relative_path}")
         return file_path
 
-    def exists(self, relative_path: Union[str, Path]) -> bool:
+    def exists(self, relative_path: str | Path) -> bool:
         """Check if a documentation file exists."""
         return (self.docs_root / relative_path).exists()
 
@@ -125,12 +123,12 @@ def get_docs() -> TenzirDocs:
     return docs
 
 
-def read_doc_file(relative_path: Union[str, Path]) -> str:
+def read_doc_file(relative_path: str | Path) -> str:
     """Convenience function to read a documentation file."""
     return docs.read_file(relative_path)
 
 
-def list_doc_files(pattern: str = "**/*") -> List[Path]:
+def list_doc_files(pattern: str = "**/*") -> list[Path]:
     """Convenience function to list documentation files."""
     return docs.list_files(pattern)
 

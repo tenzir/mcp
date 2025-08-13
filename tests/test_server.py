@@ -2,11 +2,11 @@ import pytest
 
 from tenzir_mcp.server import (
     default_ocsf_version,
-    read_docs,
     get_ocsf_class,
     get_ocsf_event_classes,
     get_ocsf_object,
     get_ocsf_versions,
+    read_docs,
 )
 
 get_docs_markdown_fn = read_docs.fn
