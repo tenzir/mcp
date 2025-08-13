@@ -1,10 +1,11 @@
 import pytest
+
 from tenzir_mcp.server import (
-    get_ocsf_versions,
     default_ocsf_version,
-    get_ocsf_event_classes,
     get_ocsf_class,
+    get_ocsf_event_classes,
     get_ocsf_object,
+    get_ocsf_versions,
 )
 
 get_ocsf_versions_fn = get_ocsf_versions.fn
@@ -30,10 +31,10 @@ class TestOCSFTools:
         result = await default_ocsf_version_fn()
         assert isinstance(result, str)
         assert len(result) > 0
-        assert 'dev' not in result.lower()
-        assert 'alpha' not in result.lower()
-        assert 'beta' not in result.lower()
-        assert 'rc' not in result.lower()
+        assert "dev" not in result.lower()
+        assert "alpha" not in result.lower()
+        assert "beta" not in result.lower()
+        assert "rc" not in result.lower()
 
     @pytest.mark.asyncio
     async def test_get_ocsf_event_classes_with_valid_version(self):

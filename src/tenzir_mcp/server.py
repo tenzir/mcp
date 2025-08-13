@@ -1,12 +1,9 @@
 import asyncio
 import json
 import logging
-import subprocess
 from importlib import resources
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-import httpx
 from fastmcp import FastMCP
 from pydantic import BaseModel, Field
 
@@ -20,7 +17,7 @@ class PipelineRequest(BaseModel):
     """Request model for pipeline execution."""
 
     pipeline: str = Field(..., description="TQL pipeline definition")
-    input_data: Optional[str] = Field(None, description="Input data as JSON string")
+    input_data: str | None = Field(None, description="Input data as JSON string")
     timeout: int = Field(30, description="Execution timeout in seconds")
 
 
@@ -100,7 +97,7 @@ class TenzirPipelineRunner:
 pipeline_runner = TenzirPipelineRunner()
 
 
-def _load_ocsf_schema(version: str) -> Dict[str, Any]:
+def _load_ocsf_schema(version: str) -> dict[str, Any]:
     """
     Load and parse an OCSF schema for the specified version.
 
@@ -116,16 +113,15 @@ def _load_ocsf_schema(version: str) -> Dict[str, Any]:
         Exception: For other loading errors
     """
     schema_text = (
-        resources.files("tenzir_mcp.data.ocsf")
-        .joinpath(f"{version}.json")
-        .read_text()
+        resources.files("tenzir_mcp.data.ocsf").joinpath(f"{version}.json").read_text()
     )
-    return json.loads(schema_text)
+    schema: dict[str, Any] = json.loads(schema_text)
+    return schema
 
 
 @mcp.tool()
 async def execute_tql_pipeline(
-    pipeline: str, input_data: Optional[str] = None, timeout: int = 30
+    pipeline: str, input_data: str | None = None, timeout: int = 30
 ) -> str:
     """
     Execute a TQL (Tenzir Query Language) pipeline.
@@ -174,7 +170,7 @@ async def validate_tql_pipeline(pipeline: str) -> str:
 
 
 @mcp.tool()
-async def get_ocsf_versions() -> List[str]:
+async def get_ocsf_versions() -> list[str]:
     """
     Get all available OCSF schema versions.
     """
@@ -211,7 +207,7 @@ async def default_ocsf_version() -> str:
         versions = await get_ocsf_versions.fn()
 
         # Filter out development versions (containing 'dev', 'alpha', 'beta', 'rc')
-        stable_versions = []
+        stable_versions: list[str] = []
         for version in versions:
             version_lower = version.lower()
             if not any(
@@ -225,7 +221,8 @@ async def default_ocsf_version() -> str:
             return "Error: No stable OCSF versions found"
 
         # Return the last (newest) stable version
-        return stable_versions[-1]
+        result: str = stable_versions[-1]
+        return result
 
     except Exception as e:
         logger.error(f"Failed to get default OCSF version: {e}")
@@ -233,7 +230,7 @@ async def default_ocsf_version() -> str:
 
 
 @mcp.tool()
-async def get_ocsf_event_classes(version: str) -> Dict[str, str]:
+async def get_ocsf_event_classes(version: str) -> dict[str, str]:
     """
     Get all OCSF event classes and their descriptions.
     """
@@ -263,7 +260,7 @@ async def get_ocsf_event_classes(version: str) -> Dict[str, str]:
 
 
 @mcp.tool()
-async def get_ocsf_class(version: str, name: str) -> Dict[str, Any]:
+async def get_ocsf_class(version: str, name: str) -> dict[str, Any]:
     """Get the definition of a specific OCSF event class."""
     try:
         schema = _load_ocsf_schema(version)
@@ -276,11 +273,7 @@ async def get_ocsf_class(version: str, name: str) -> Dict[str, Any]:
         for class_id, class_data in schema["classes"].items():
             class_name = class_data.get("name", class_id)
             if class_name.lower() == name.lower() or class_id.lower() == name.lower():
-                return {
-                    "id": class_id,
-                    "name": class_name,
-                    "data": class_data
-                }
+                return {"id": class_id, "name": class_name, "data": class_data}
         return {"error": f"Class '{name}' not found in OCSF schema version {version}"}
 
     except FileNotFoundError:
@@ -295,7 +288,7 @@ async def get_ocsf_class(version: str, name: str) -> Dict[str, Any]:
 
 
 @mcp.tool()
-async def get_ocsf_object(version: str, name: str) -> Dict[str, Any]:
+async def get_ocsf_object(version: str, name: str) -> dict[str, Any]:
     """Get the definition of a specific OCSF object."""
     try:
         schema = _load_ocsf_schema(version)
@@ -308,11 +301,7 @@ async def get_ocsf_object(version: str, name: str) -> Dict[str, Any]:
         for object_id, object_data in schema["objects"].items():
             object_name = object_data.get("name", object_id)
             if object_name.lower() == name.lower() or object_id.lower() == name.lower():
-                return {
-                    "id": object_id,
-                    "name": object_name,
-                    "data": object_data
-                }
+                return {"id": object_id, "name": object_name, "data": object_data}
 
         return {"error": f"Object '{name}' not found in OCSF schema version {version}"}
 
@@ -411,7 +400,7 @@ async def ocsf_instructions() -> str:
 
 
 def main() -> None:
-    asyncio.run(mcp.run())
+    asyncio.run(mcp.run())  # type: ignore[func-returns-value]
 
 
 if __name__ == "__main__":
