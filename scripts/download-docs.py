@@ -77,6 +77,9 @@ def extract_docs(archive_content: bytes, docs_dir: Path, commit_sha: str) -> Non
         log("   Cleaning existing docs directory")
         shutil.rmtree(docs_dir)
 
+    # Define documentation file extensions to keep
+    doc_extensions = {'.md', '.mdx', '.mdoc'}
+
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
         zip_file = temp_path / "docs.zip"
@@ -98,14 +101,19 @@ def extract_docs(archive_content: bytes, docs_dir: Path, commit_sha: str) -> Non
         extracted_dir = extracted_dirs[0]
         log(f"   Found extracted directory: {extracted_dir.name}")
 
-        # Move contents to final location
+        # Copy only documentation files, preserving directory structure
         docs_dir.mkdir(parents=True, exist_ok=True)
-        for item in extracted_dir.iterdir():
-            dest = docs_dir / item.name
-            if item.is_dir():
-                shutil.copytree(item, dest)
-            else:
-                shutil.copy2(item, dest)
+        files_copied = 0
+        
+        for file_path in extracted_dir.rglob("*"):
+            if file_path.is_file() and file_path.suffix.lower() in doc_extensions:
+                rel_path = file_path.relative_to(extracted_dir)
+                dest_path = docs_dir / rel_path
+                dest_path.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(file_path, dest_path)
+                files_copied += 1
+
+        log(f"   Filtered extraction: kept {files_copied} documentation files (.md, .mdx, .mdoc)")
 
     # Create a metadata file with commit info
     metadata = {
