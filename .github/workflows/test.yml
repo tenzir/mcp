@@ -63,7 +63,7 @@ jobs:
     
     - name: Test with pytest
       run: |
-        uv run pytest --cov=tenzir_mcp --cov-report=term-missing
+        uv run pytest
 
   build:
     name: Build distribution
