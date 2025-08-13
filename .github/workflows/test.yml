@@ -92,6 +92,7 @@ jobs:
     
     - name: Check package metadata
       run: |
+        uv venv
         uv pip install check-wheel-contents
         uv run check-wheel-contents dist/*.whl
     
