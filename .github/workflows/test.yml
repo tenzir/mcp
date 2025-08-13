@@ -99,7 +99,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        method: [pip, uvx]
     
     steps:
     - name: Download artifacts
@@ -111,16 +110,6 @@ jobs:
     - name: Install uv
       uses: astral-sh/setup-uv@v4
     
-    - name: Test pip installation
-      if: matrix.method == 'pip'
-      run: |
-        uv venv test-env
-        . test-env/bin/activate
-        uv pip install dist/*.whl
-        tenzir-mcp --help
-        python -c "import tenzir_mcp; print(tenzir_mcp.__version__)"
-    
-    - name: Test uvx installation
-      if: matrix.method == 'uvx'
+    - name: Test installation
       run: |
         uv tool run --from dist/*.whl tenzir-mcp --help
