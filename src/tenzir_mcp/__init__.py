@@ -1,9 +1,11 @@
-"""Tenzir MCP Server - FastMCP integration for Tenzir data pipelines."""
+"""Tenzir MCP Server."""
 
 __version__ = "0.1.0"
 __author__ = "Tenzir"
-__email__ = "info@tenzir.com"
+__email__ = "engineering@tenzir.com"
 
-# from .server import app
-
-# __all__ = ["app"]
+__all__ = [
+    "__version__",
+    "__author__",
+    "__email__",
+]
