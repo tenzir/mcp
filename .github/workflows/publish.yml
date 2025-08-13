@@ -1,0 +1,81 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write  # Required for trusted publishing
+
+jobs:
+  build:
+    name: Build distribution
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        enable-cache: false
+    
+    - name: Set up Python
+      run: uv python install 3.12
+    
+    - name: Build package
+      run: |
+        uv build
+        ls -la dist/
+    
+    - name: Check package
+      run: |
+        uv pip install check-wheel-contents twine
+        uv run check-wheel-contents dist/*.whl
+        uv run twine check dist/*
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+        retention-days: 7
+
+  publish-to-pypi:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    environment:
+      name: pypi
+      url: https://pypi.org/p/tenzir-mcp
+    
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+    
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      # Uses trusted publishing - no API token needed when properly configured
+
+  verify-installation:
+    name: Verify installation
+    needs: publish-to-pypi
+    if: needs.publish-to-pypi.result == 'success'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+    
+    - name: Wait for package availability
+      run: sleep 30
+    
+    - name: Test installation from PyPI
+      run: |
+        uvx --from tenzir-mcp tenzir-mcp --help

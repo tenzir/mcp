@@ -1,0 +1,136 @@
+name: Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        exclude:
+          # Exclude some combinations to save CI time
+          - os: windows-latest
+            python-version: "3.10"
+          - os: macos-latest
+            python-version: "3.10"
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        enable-cache: true
+        cache-dependency-glob: "**/pyproject.toml"
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      run: uv python install ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        uv sync --all-extras --dev
+    
+    - name: Lint with ruff
+      run: |
+        uv run ruff check src tests
+      if: matrix.os == 'ubuntu-latest'
+    
+    - name: Format check with black
+      run: |
+        uv run black --check src tests
+      if: matrix.os == 'ubuntu-latest'
+    
+    - name: Sort imports check with isort
+      run: |
+        uv run isort --check-only src tests
+      if: matrix.os == 'ubuntu-latest'
+    
+    - name: Type check with mypy
+      run: |
+        uv run mypy src
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version != '3.13'
+    
+    - name: Test with pytest
+      run: |
+        uv run pytest --cov=tenzir_mcp --cov-report=xml --cov-report=term-missing
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-${{ matrix.os }}-py${{ matrix.python-version }}
+        fail_ci_if_error: false
+      if: matrix.os == 'ubuntu-latest'
+
+  build:
+    name: Build distribution
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+    
+    - name: Build package
+      run: |
+        uv build
+        ls -la dist/
+    
+    - name: Check package metadata
+      run: |
+        uv pip install check-wheel-contents
+        uv run check-wheel-contents dist/*.whl
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+        retention-days: 7
+
+  test-install:
+    name: Test installation
+    runs-on: ${{ matrix.os }}
+    needs: build
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        method: [pip, uvx]
+    
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+    
+    - name: Test pip installation
+      if: matrix.method == 'pip'
+      run: |
+        uv venv test-env
+        . test-env/bin/activate || . test-env/Scripts/activate
+        uv pip install dist/*.whl
+        tenzir-mcp --help
+        python -c "import tenzir_mcp; print(tenzir_mcp.__version__)"
+    
+    - name: Test uvx installation
+      if: matrix.method == 'uvx'
+      run: |
+        uvx --from dist/*.whl tenzir-mcp --help
