@@ -370,7 +370,7 @@ async def read_docs(path: str) -> str:
 
         # Initialize docs
         docs = TenzirDocs()
-        
+
         # Common paths to try
         possible_paths = [
             f"src/content/docs/{clean_path}.md",
