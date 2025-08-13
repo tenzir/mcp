@@ -68,5 +68,8 @@ verify-install:  ## Verify package installation with uv tool run
 update-schemas:  ## Update OCSF schemas
 	uv run python scripts/download-ocsf-schemas.py
 
+update-docs:  ## Update Tenzir documentation
+	uv run python scripts/download-docs.py
+
 check-tenzir:  ## Check if Tenzir is available
 	tenzir --version || echo "Tenzir not found in PATH"

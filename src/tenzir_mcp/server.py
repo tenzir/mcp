@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import os.path
 from importlib import resources
 from typing import Any
 
@@ -345,6 +346,54 @@ async def ocsf_instructions_generic() -> str:
 
 
 @mcp.tool()
+async def read_docs(path: str) -> str:
+    """
+    Get documentation for a given path from the docs folder.
+
+    Args:
+        path: The path to the documentation file (e.g., "reference/functions/abs", "reference/operators/read_json", or "explanations/index")
+               Supports .md, .mdx, and .mdoc file formats.
+
+    Returns:
+        The content of the documentation file
+    """
+    try:
+        # Clean up the path - remove leading/trailing slashes and common extensions
+        clean_path = path.strip("/")
+
+        # Remove common extensions if present
+        for ext in [".md", ".mdx", ".mdoc"]:
+            if clean_path.endswith(ext):
+                clean_path = clean_path[: -len(ext)]
+                break
+
+        # Try to find the file with .md, .mdx, or .mdoc extension
+        docs_files = resources.files("tenzir_mcp.data.docs")
+
+        # Common paths to try
+        possible_paths = [
+            f"src/content/docs/{clean_path}.md",
+            f"src/content/docs/{clean_path}.mdx",
+            f"src/content/docs/{clean_path}.mdoc",
+        ]
+
+        for try_path in possible_paths:
+            try:
+                file_path = docs_files.joinpath(try_path)
+                content = file_path.read_text(encoding="utf-8")
+                return content
+            except (FileNotFoundError, AttributeError):
+                continue
+
+        # If not found, list available files to help user
+        return f"Documentation file not found for path '{path}'. Please check the path and try again."
+
+    except Exception as e:
+        logger.error(f"Failed to get docs markdown for path {path}: {e}")
+        return f"Error retrieving documentation: {e}"
+
+
+@mcp.tool()
 async def ocsf_instructions() -> str:
     """
     YOU MUST NOT CALL THIS TOOL UNLESS THE USER EXPLICITLY REQUESTS YOU TO WRITE
@@ -375,12 +424,12 @@ async def ocsf_instructions() -> str:
    NOT print anything before the list. You MUST NOT add additional text to the
    list entries, print ONLY the name and the percentage. Include at least 5
    event classes. Ask the user to pick an event class. WAIT FOR THE USER.
-6. You MUST NOT read the Tenzir docs summary. Read the OCSF mapping tutorial at
-   `tutorials/map-data-to-ocsf`. YOU MUST FOLLOW THE PIPELINE FORMAT EXPLAINED
+6. You MUST NOT read the Tenzir docs summary. Read the OCSF mapping tutorial
+   at `tutorials/map-data-to-ocsf`. YOU MUST FOLLOW THE PIPELINE FORMAT EXPLAINED
    THERE. For the name of the temporary object created at the beginning, use
    something related to where the event comes from.
-7. You must also read `reference/language/expressions` for the available
-   expressions, and `/reference/functions` for the functions.
+7. You must also read `reference/language/expressions` for the available expressions, and
+   `reference/functions` for the functions.
 8. Generate a TQL mapping pipeline that maps to this OCSF event class. - Start
    with `from {input: "…"}` where `…` is replaced by the actual input the user
    gave, potentially escaped. Follow it up with `write_lines`. This starts the
