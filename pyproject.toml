@@ -71,13 +71,20 @@ tenzir-mcp = "tenzir_mcp.server:main"
 requires = ["hatchling>=1.21.0"]
 build-backend = "hatchling.build"
 
+[tool.hatch.build.hooks.custom]
+path = "scripts/build_hook.py"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/tenzir_mcp"]
+include = [
+    "src/tenzir_mcp/data/docs/**/*",
+]
 
 [tool.hatch.build.targets.sdist]
 include = [
     "/src",
     "/tests",
+    "/scripts",
     "/README.md",
     "/LICENSE",
     "/pyproject.toml",

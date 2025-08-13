@@ -39,3 +39,6 @@ coverage.xml
 *.db
 uv.lock
 mcp_config.json
+
+# Downloaded documentation (generated at build time)
+src/tenzir_mcp/data/docs/
