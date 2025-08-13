@@ -19,25 +19,17 @@ The MCP server requires [Tenzir](https://tenzir.com) to be installed and availab
 tenzir --version
 ```
 
-If not installed, follow the [Tenzir installation guide](https://docs.tenzir.com/installation).
-
-### Install the MCP Server
-
-Install with pip:
+If not installed, follow the
+[documentation](https://docs.tenzir.com/guides/node-setup/deploy-a-node) or just
+run:
 
 ```sh
-pip install tenzir-mcp
-```
-
-Or use uv for automatic dependency management:
-
-```sh
-uv tool install tenzir-mcp
+curl https://get.tenzir.app | sh
 ```
 
 ### Quick Test
 
-Run without installation (requires uv):
+Run without installation:
 
 ```sh
 uv tool run tenzir-mcp --help
