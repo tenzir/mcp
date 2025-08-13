@@ -400,7 +400,7 @@ async def ocsf_instructions() -> str:
 
 
 def main() -> None:
-    asyncio.run(mcp.run())  # type: ignore[func-returns-value]
+    mcp.run()
 
 
 if __name__ == "__main__":
