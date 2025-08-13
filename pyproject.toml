@@ -76,18 +76,21 @@ path = "scripts/build_hook.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tenzir_mcp"]
-include = [
+artifacts = [
     "src/tenzir_mcp/data/docs/**/*",
 ]
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "/src",
+    "/src/**/*",
     "/tests",
     "/scripts",
     "/README.md",
     "/LICENSE",
     "/pyproject.toml",
+]
+artifacts = [
+    "src/tenzir_mcp/data/docs/**/*",
 ]
 exclude = [
     "*.pyc",
