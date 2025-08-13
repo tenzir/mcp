@@ -7,6 +7,8 @@ from typing import Any
 from fastmcp import FastMCP
 from pydantic import BaseModel, Field
 
+from tenzir_mcp.docs import TenzirDocs
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -366,9 +368,9 @@ async def read_docs(path: str) -> str:
                 clean_path = clean_path[: -len(ext)]
                 break
 
-        # Try to find the file with .md, .mdx, or .mdoc extension
-        docs_files = resources.files("tenzir_mcp.data.docs")
-
+        # Initialize docs
+        docs = TenzirDocs()
+        
         # Common paths to try
         possible_paths = [
             f"src/content/docs/{clean_path}.md",
@@ -377,12 +379,8 @@ async def read_docs(path: str) -> str:
         ]
 
         for try_path in possible_paths:
-            try:
-                file_path = docs_files.joinpath(try_path)
-                content = file_path.read_text(encoding="utf-8")
-                return content
-            except (FileNotFoundError, AttributeError):
-                continue
+            if docs.exists(try_path):
+                return docs.read_file(try_path)
 
         # If not found, list available files to help user
         return f"Documentation file not found for path '{path}'. Please check the path and try again."
