@@ -8,6 +8,10 @@ A [Model Context Protocol](https://modelcontextprotocol.io) server for
 security data pipelines and map data to the [Open Cybersecurity Schema
 Framework (OCSF)](https://ocsf.io).
 
+<a href="https://glama.ai/mcp/servers/@tenzir/mcp">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@tenzir/mcp/badge" alt="Tenzir Server MCP server" />
+</a>
+
 ## Installation
 
 ### Prerequisites
