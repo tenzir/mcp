@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import os
 from importlib import resources
 from typing import Any
 
@@ -34,8 +35,10 @@ class PipelineResponse(BaseModel):
 class TenzirPipelineRunner:
     """Handles Tenzir pipeline execution."""
 
-    def __init__(self, tenzir_binary: str = "tenzir"):
+    def __init__(self, tenzir_binary: str = "tenzir", use_docker: bool = False, docker_container: str = "tenzir-server"):
         self.tenzir_binary = tenzir_binary
+        self.use_docker = use_docker or os.getenv("TENZIR_USE_DOCKER", "").lower() in ("true", "1", "yes")
+        self.docker_container = docker_container or os.getenv("TENZIR_DOCKER_CONTAINER", "tenzir-server")
 
     async def execute_pipeline(self, request: PipelineRequest) -> PipelineResponse:
         """Execute a TQL pipeline."""
@@ -45,7 +48,13 @@ class TenzirPipelineRunner:
 
         try:
             # Prepare command
-            cmd = [self.tenzir_binary, "--dump-diagnostics", request.pipeline]
+            if self.use_docker:
+                cmd = [
+                    "docker", "exec", "-i", self.docker_container,
+                    "tenzir", "--dump-diagnostics", request.pipeline
+                ]
+            else:
+                cmd = [self.tenzir_binary, "--dump-diagnostics", request.pipeline]
 
             # Execute pipeline
             process = await asyncio.create_subprocess_exec(
@@ -96,7 +105,16 @@ class TenzirPipelineRunner:
 
 
 # Global pipeline runner instance
-pipeline_runner = TenzirPipelineRunner()
+# Check environment variables for Docker configuration
+_use_docker = os.getenv("TENZIR_USE_DOCKER", "").lower() in ("true", "1", "yes")
+_docker_container = os.getenv("TENZIR_DOCKER_CONTAINER", "tenzir-server")
+_tenzir_binary = os.getenv("TENZIR_BINARY", "tenzir")
+
+pipeline_runner = TenzirPipelineRunner(
+    tenzir_binary=_tenzir_binary,
+    use_docker=_use_docker,
+    docker_container=_docker_container
+)
 
 
 def _load_ocsf_schema(version: str) -> dict[str, Any]:
@@ -152,7 +170,13 @@ async def validate_tql_pipeline(pipeline: str) -> str:
     """
     try:
         # Use tenzir with --dry-run flag to validate syntax
-        cmd = ["tenzir", "--dump-pipeline", "--dump-diagnostics", pipeline]
+        if pipeline_runner.use_docker:
+            cmd = [
+                "docker", "exec", "-i", pipeline_runner.docker_container,
+                "tenzir", "--dump-pipeline", "--dump-diagnostics", pipeline
+            ]
+        else:
+            cmd = [pipeline_runner.tenzir_binary, "--dump-pipeline", "--dump-diagnostics", pipeline]
 
         process = await asyncio.create_subprocess_exec(
             *cmd,
