@@ -1,0 +1,52 @@
+services:
+  tenzir:
+    image: tenzir/tenzir:latest
+    container_name: tenzir-server
+    entrypoint: ["/bin/sh"]
+    command: ["-c", "sleep infinity"]  # Keep container running for exec commands
+    ports:
+      - "5158:5158"  # Tenzir API port
+      - "4000:4000"  # Tenzir web interface port (if available)
+    volumes:
+      - tenzir_data:/var/lib/tenzir
+      - ./data:/data  # Mount local data directory for input/output
+    environment:
+      # Tenzir configuration
+      TENZIR_BIND_ADDR: "0.0.0.0:5158"
+      TENZIR_WEB_BIND_ADDR: "0.0.0.0:4000"
+    networks:
+      - tenzir-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "tenzir", "version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Tenzir development version with more tools
+  tenzir-dev:
+    image: tenzir/tenzir-dev:latest
+    container_name: tenzir-dev
+    profiles:
+      - dev
+    ports:
+      - "5159:5158"  # Different port for dev instance
+    volumes:
+      - tenzir_dev_data:/var/lib/tenzir
+      - ./data:/data
+    environment:
+      TENZIR_BIND_ADDR: "0.0.0.0:5158"
+    networks:
+      - tenzir-network
+    restart: unless-stopped
+
+volumes:
+  tenzir_data:
+    driver: local
+  tenzir_dev_data:
+    driver: local
+
+networks:
+  tenzir-network:
+    driver: bridge

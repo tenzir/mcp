@@ -12,10 +12,28 @@ with OCSF schemas.
 
 ## Prerequisites
 
+### Option 1: Local Installation
 Tenzir must be installed and available in the PATH. Check with:
 
 ```bash
 make check-tenzir
+```
+
+### Option 2: Docker Setup (Recommended)
+Use Docker Compose to run Tenzir in a container:
+
+```bash
+# Start Tenzir container
+make docker-up
+
+# Check if Tenzir is running in Docker
+make check-tenzir-docker
+
+# View container logs
+make docker-logs
+
+# Check container status
+make docker-status
 ```
 
 ## Common Development Commands
@@ -29,7 +47,9 @@ Use these Makefile targets for development:
 
 ### Development and Testing
 
-- `make dev` - Run the development server
+- `make dev` - Run the development server (uses local Tenzir)
+- `make dev-docker` - Run the development server with Docker configuration
+- `make dev-local` - Run the development server with local configuration
 - `make dev-module` - Run as Python module
 - `make test` - Run all tests
 - `make test-cov` - Run tests with coverage report

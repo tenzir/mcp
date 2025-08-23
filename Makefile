@@ -73,3 +73,28 @@ update-docs:  ## Update Tenzir documentation
 
 check-tenzir:  ## Check if Tenzir is available
 	tenzir --version || echo "Tenzir not found in PATH"
+
+# Docker commands
+docker-up:  ## Start Tenzir using Docker Compose
+	docker-compose up -d
+
+docker-down:  ## Stop Tenzir Docker containers
+	docker-compose down
+
+docker-dev:  ## Start Tenzir development container
+	docker-compose --profile dev up -d
+
+docker-logs:  ## Show Tenzir container logs
+	docker-compose logs -f tenzir
+
+docker-status:  ## Check Docker container status
+	docker-compose ps
+
+check-tenzir-docker:  ## Check if Tenzir is available in Docker
+	docker exec tenzir-server tenzir version || echo "Tenzir Docker container not running"
+
+dev-docker:  ## Run development server with Docker configuration
+	cp .env.docker .env && uv run tenzir-mcp
+
+dev-local:  ## Run development server with local configuration
+	cp .env.local .env && uv run tenzir-mcp
