@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "tenzir": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--project",
+        "/Users/jannis/tenzir/mcp",
+        "tenzir-mcp"
+      ]
+    }
+  }
+}

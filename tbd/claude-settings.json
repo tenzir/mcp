@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__tenzir__execute_tql_pipeline",
+      "mcp__tenzir__validate_tql_pipeline",
+      "mcp__tenzir__get_ocsf_event_classes",
+      "mcp__tenzir__get_ocsf_class",
+      "mcp__tenzir__get_ocsf_object",
+      "mcp__tenzir__read_docs",
+      "mcp__tenzir__tql_instructions"
+    ],
+    "deny": [
+      "*"
+    ]
+  }
+}

@@ -3,7 +3,7 @@ import pytest
 from tenzir_mcp.server import (
     default_ocsf_version,
     get_ocsf_class,
-    get_ocsf_event_classes,
+    get_ocsf_classes_overview,
     get_ocsf_object,
     get_ocsf_versions,
     read_docs,
@@ -12,7 +12,7 @@ from tenzir_mcp.server import (
 get_docs_markdown_fn = read_docs.fn
 get_ocsf_versions_fn = get_ocsf_versions.fn
 default_ocsf_version_fn = default_ocsf_version.fn
-get_ocsf_event_classes_fn = get_ocsf_event_classes.fn
+get_ocsf_event_classes_fn = get_ocsf_classes_overview.fn
 get_ocsf_class_fn = get_ocsf_class.fn
 get_ocsf_object_fn = get_ocsf_object.fn
 
