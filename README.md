@@ -32,7 +32,7 @@ curl https://get.tenzir.app | sh
 Run without installation:
 
 ```sh
-uv tool run tenzir-mcp --help
+uvx tenzir-mcp --help
 ```
 
 ## Usage with Claude
@@ -58,7 +58,7 @@ Use the Claude MCP CLI to add the server:
 
 ```sh
 # For production use (from PyPI)
-claude mcp add tenzir --scope user -- uv tool run tenzir-mcp
+claude mcp add tenzir --scope user -- uvx tenzir-mcp
 
 # For development (from source)
 claude mcp add tenzir --scope user -- uv run --project $(pwd) tenzir-mcp
