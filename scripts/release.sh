@@ -2,33 +2,50 @@
 
 set -euo pipefail
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-BOLD='\033[1m'
-NC='\033[0m' # No Color
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Get the project root (parent of scripts directory)
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Change to project root
+cd "$PROJECT_ROOT"
+
+# Colors for output - using actual escape characters
+RED=$'\033[0;31m'
+GREEN=$'\033[0;32m'
+YELLOW=$'\033[1;33m'
+BLUE=$'\033[0;34m'
+BOLD=$'\033[1m'
+NC=$'\033[0m' # No Color
 
 # Files containing version
 PYPROJECT_FILE="pyproject.toml"
 INIT_FILE="src/tenzir_mcp/__init__.py"
 
 # Function to print colored output
-print_info() { echo -e "${GREEN}►${NC} $1"; }
-print_warn() { echo -e "${YELLOW}⚠${NC} $1"; }
-print_error() { echo -e "${RED}✗${NC} $1"; }
-print_header() { echo -e "\n${BOLD}$1${NC}\n"; }
+print_info() { printf "${GREEN}►${NC} %s\n" "$1"; }
+print_warn() { printf "${YELLOW}⚠${NC} %s\n" "$1"; }
+print_error() { printf "${RED}✗${NC} %s\n" "$1"; }
+print_header() { printf "\n${BOLD}%s${NC}\n\n" "$1"; }
+
+# Functions to print to stderr (for interactive prompts)
+print_header_stderr() { printf "\n${BOLD}%s${NC}\n\n" "$1" >&2; }
+print_error_stderr() { printf "${RED}✗${NC} %s\n" "$1" >&2; }
 
 # Function to get current version from pyproject.toml
 get_current_version() {
+    if [[ ! -f "$PYPROJECT_FILE" ]]; then
+        print_error "Cannot find $PYPROJECT_FILE in $(pwd)"
+        exit 1
+    fi
     grep '^version = ' "$PYPROJECT_FILE" | sed 's/version = "\(.*\)"/\1/'
 }
 
 # Function to parse semantic version
 parse_version() {
     local version=$1
-    IFS='.' read -r major minor patch <<< "$version"
+    local IFS='.'
+    read -r major minor patch <<< "$version"
     echo "$major $minor $patch"
 }
 
@@ -85,9 +102,10 @@ check_branch() {
     current_branch=$(git branch --show-current)
     if [[ "$current_branch" != "main" ]]; then
         print_warn "Not on main branch (currently on: $current_branch)"
-        echo "It's recommended to release from the main branch."
-        read -p "Continue anyway? (y/N): " -n 1 -r
-        echo
+        printf "It's recommended to release from the main branch.\n"
+        printf "Continue anyway? (y/N): "
+        read -n 1 -r
+        printf "\n"
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
             exit 0
         fi
@@ -96,23 +114,24 @@ check_branch() {
 
 # Function to select release type interactively
 select_release_type() {
-    print_header "Select Release Type"
-    echo "Current version: ${BOLD}$1${NC}"
-    echo ""
-    echo "  ${BOLD}1)${NC} Patch ($(bump_version "$1" patch)) - Bug fixes and small changes"
-    echo "  ${BOLD}2)${NC} Minor ($(bump_version "$1" minor)) - New features (backwards-compatible)"
-    echo "  ${BOLD}3)${NC} Major ($(bump_version "$1" major)) - Breaking changes"
-    echo ""
+    print_header_stderr "Select Release Type"
+    printf "Current version: ${BOLD}%s${NC}\n" "$1" >&2
+    printf "\n" >&2
+    printf "  ${BOLD}1)${NC} Patch (%s) - Bug fixes and small changes\n" "$(bump_version "$1" patch)" >&2
+    printf "  ${BOLD}2)${NC} Minor (%s) - New features (backwards-compatible)\n" "$(bump_version "$1" minor)" >&2
+    printf "  ${BOLD}3)${NC} Major (%s) - Breaking changes\n" "$(bump_version "$1" major)" >&2
+    printf "\n" >&2
     
     local choice
     while true; do
-        read -p "Select release type (1-3): " -n 1 -r choice
-        echo
+        printf "Select release type (1-3): " >&2
+        read -n 1 -r choice
+        echo >&2
         case $choice in
             1) echo "patch"; break ;;
             2) echo "minor"; break ;;
             3) echo "major"; break ;;
-            *) print_error "Invalid choice. Please select 1, 2, or 3." ;;
+            *) print_error_stderr "Invalid choice. Please select 1, 2, or 3." ;;
         esac
     done
 }
@@ -213,20 +232,21 @@ main() {
     
     # Show release summary
     print_header "Release Summary"
-    echo "  📌 Type:    ${BOLD}$bump_type${NC}"
-    echo "  📦 Version: ${BOLD}$current_version${NC} → ${BOLD}$new_version${NC}"
-    echo "  🏷️  Tag:     ${BOLD}v$new_version${NC}"
-    echo ""
-    echo "This will:"
-    echo "  1. Update version in pyproject.toml and __init__.py"
-    echo "  2. Run pre-release checks (make check)"
-    echo "  3. Commit and tag as v$new_version"
-    echo "  4. Push to GitHub"
-    echo "  5. Open GitHub release page in your browser"
+    printf "  📌 Type:    ${BOLD}%s${NC}\n" "$bump_type"
+    printf "  📦 Version: ${BOLD}%s${NC} → ${BOLD}%s${NC}\n" "$current_version" "$new_version"
+    printf "  🏷️  Tag:     ${BOLD}v%s${NC}\n" "$new_version"
+    printf "\n"
+    printf "This will:\n"
+    printf "  1. Update version in pyproject.toml and __init__.py\n"
+    printf "  2. Run pre-release checks (make check)\n"
+    printf "  3. Create a release branch and PR\n"
+    printf "  4. Auto-merge PR, create tag, and draft GitHub release\n"
+    printf "  5. Open browser for you to edit and publish release notes\n"
     
     # Confirm
-    echo ""
-    read -p "$(echo -e "${BOLD}Proceed with release?${NC} (y/N): ")" -n 1 -r
+    printf "\n"
+    printf "${BOLD}Proceed with release?${NC} (y/N): "
+    read -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         print_info "Release cancelled"
@@ -246,52 +266,109 @@ main() {
             exit 1
         fi
         
+        # Create release branch
+        local release_branch="release-v$new_version"
+        print_info "Creating release branch $release_branch..."
+        git checkout -b "$release_branch"
+        
         # Commit changes
         print_info "Committing version bump..."
         git add "$PYPROJECT_FILE" "$INIT_FILE"
         git commit -m "Release v$new_version"
         
-        # Create tag
-        print_info "Creating tag v$new_version..."
-        git tag "v$new_version"
+        # Push branch
+        print_info "Pushing branch to GitHub..."
+        git push -u origin "$release_branch"
         
-        # Push to origin
-        print_info "Pushing to GitHub..."
-        git push origin main
-        git push origin "v$new_version"
-        
-        # Success!
-        echo ""
-        print_info "${GREEN}✓ Release v$new_version pushed successfully!${NC}"
-        
-        # Get the GitHub release URL
-        release_url=$(get_github_release_url "$new_version" "$previous_tag")
-        
-        # Open browser
-        echo ""
-        print_info "Opening GitHub release page..."
-        if command -v open &> /dev/null; then
-            open "$release_url"
-        elif command -v xdg-open &> /dev/null; then
-            xdg-open "$release_url"
+        # Create PR using GitHub CLI
+        print_info "Creating pull request..."
+        if command -v gh &> /dev/null; then
+            pr_url=$(gh pr create \
+                --title "Release v$new_version" \
+                --body "Automated version bump for release v$new_version" \
+                --base main \
+                --head "$release_branch")
+            
+            printf "\n"
+            printf "${GREEN}✓ Pull request created!${NC}\n"
+            printf "PR: %s\n" "$pr_url"
+            
+            # Wait for PR to be ready
+            print_info "Waiting for PR checks..."
+            if gh pr checks "$pr_url" --watch; then
+                # Auto-merge if checks pass
+                print_info "Checks passed! Merging PR..."
+                gh pr merge "$pr_url" --squash --auto --delete-branch
+                
+                # Wait for merge
+                print_info "Waiting for PR to merge..."
+                while gh pr view "$pr_url" --json state -q .state | grep -q "OPEN"; do
+                    sleep 2
+                done
+                
+                # Switch back to main and pull
+                print_info "PR merged! Switching to main..."
+                git checkout main
+                git pull origin main
+                
+                # Create and push tag
+                print_info "Creating and pushing tag v$new_version..."
+                git tag "v$new_version"
+                git push origin "v$new_version"
+                
+                # Create draft GitHub release with auto-generated notes
+                print_info "Creating draft GitHub release..."
+                gh release create "v$new_version" \
+                    --draft \
+                    --title "v$new_version" \
+                    --generate-notes \
+                    --notes-start-tag "${previous_tag:-$(git rev-list --max-parents=0 HEAD)}"
+                
+                # Get the release URL
+                release_url="https://github.com/tenzir/mcp/releases/edit/v$new_version"
+                
+                printf "\n"
+                printf "${GREEN}✓ Draft release created!${NC}\n"
+                printf "\n"
+                print_info "Opening browser to edit and publish release..."
+                if command -v open &> /dev/null; then
+                    open "$release_url"
+                elif command -v xdg-open &> /dev/null; then
+                    xdg-open "$release_url"
+                else
+                    printf "Please open this URL to edit and publish the release:\n"
+                    printf "%s\n" "$release_url"
+                fi
+                
+                printf "\n"
+                printf "📝 ${YELLOW}Next steps:${NC}\n"
+                printf "  1. Review the auto-generated release notes\n"
+                printf "  2. Edit as needed (add highlights, breaking changes, etc.)\n"
+                printf "  3. Click 'Publish release' when ready\n"
+                printf "\n"
+                printf "After publishing, verify with:\n"
+                printf "  uvx tenzir-mcp@latest --version\n"
+                printf "  docker pull ghcr.io/tenzir/mcp:latest\n"
+            else
+                print_error "PR checks failed! Please review and fix."
+                printf "PR: %s\n" "$pr_url"
+                exit 1
+            fi
         else
-            echo "Please open this URL in your browser:"
-            echo "$release_url"
+            print_warn "GitHub CLI (gh) not found. Please install it:"
+            printf "  brew install gh\n"
+            exit 1
         fi
-        
-        echo ""
-        echo "📝 Next: Add detailed release notes in the browser and click 'Publish release'"
-        echo ""
-        echo "After publishing, verify with:"
-        echo "  uvx tenzir-mcp@latest --version"
-        echo "  docker pull ghcr.io/tenzir/mcp:latest"
     else
         print_info "[DRY RUN] Would update version to $new_version"
         print_info "[DRY RUN] Would run: make check"
+        print_info "[DRY RUN] Would create branch: release-v$new_version"
         print_info "[DRY RUN] Would commit: Release v$new_version"
+        print_info "[DRY RUN] Would create PR and wait for checks"
+        print_info "[DRY RUN] Would auto-merge PR after checks pass"
         print_info "[DRY RUN] Would create tag: v$new_version"
-        print_info "[DRY RUN] Would push to GitHub"
-        print_info "[DRY RUN] Would open browser to GitHub release page"
+        print_info "[DRY RUN] Would create draft GitHub release"
+        print_info "[DRY RUN] Would open browser to edit release notes"
     fi
 }
 
