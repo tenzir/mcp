@@ -93,7 +93,10 @@ The server exposes these tools via the Model Context Protocol:
 
 ## Best Practices
 
-- ALWAYS run `make check` before committing any changes.
+- CRITICAL: ALWAYS run `make check` before committing any changes
+- All MCP tools return structured error dictionaries for consistent error handling
+- Use async/await patterns consistently throughout the codebase
+- Follow strict type hints (mypy with strict settings enforced)
 
 ## Important Notes
 
@@ -103,3 +106,4 @@ The server exposes these tools via the Model Context Protocol:
 - Documentation is embedded and updated via `make update-docs`
 - The project uses uv for dependency management and virtual environments
 - Python 3.10+ is required
+- FastMCP handles the MCP protocol implementation
