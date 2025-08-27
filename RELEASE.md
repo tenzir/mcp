@@ -1,227 +1,102 @@
 # Release Process
 
-## Prerequisites
+## Overview
 
-1. **PyPI Account**: Create at https://pypi.org/account/register/
-2. **GitHub Repository**: Ensure code is pushed to GitHub
-3. **PyPI API Token**: Generate token for PyPI
+When you create a release, the following artifacts are automatically published:
 
-## Production Release
+- **PyPI Package**: `tenzir-mcp` available via `pip install` / `uvx`
+- **Docker Images**: Multi-platform (linux/amd64, linux/arm64) images pushed to:
+  - GitHub Container Registry: `ghcr.io/tenzir/mcp`
+  - Docker Hub: `docker.io/tenzir/mcp`
+  - Tagged as: `latest`, `v0.1.0`, `0.1`, `0` (semantic versioning)
 
-### Option 1: Manual Release with UV
+## Steps to Cut a Release
 
-1. **Update Version** in `pyproject.toml` and `src/tenzir_mcp/__init__.py`
+### Automated (Recommended)
 
-2. **Update CHANGELOG.md**
-   - Move items from "Unreleased" to the new version section
-   - Add release date
+```bash
+# Interactive release process
+./scripts/release.sh
 
-3. **Commit Changes**
+# Preview mode (no changes made)
+./scripts/release.sh --dry-run
+```
+
+The interactive flow:
+
+1. **Select release type** - Choose patch, minor, or major with preview of new version
+2. **Review changes** - See all commits and changes since last release
+3. **Confirm** - Simple yes/no to proceed
+4. **Automatic execution** - Updates version, commits, tags, pushes
+5. **Browser redirect** - Opens GitHub release page with pre-filled information
+
+You just need to add the detailed release description and click "Publish release".
+
+### Manual Steps
+
+1. **Update Version**
+   - Edit version in `pyproject.toml`
+   - Edit version in `src/tenzir_mcp/__init__.py`
+
+2. **Commit and Push**
+
    ```bash
    git add -A
-   git commit -m "Release v0.1.0"
-   ```
-
-4. **Build Package**
-   ```bash
-   uv build
-   ```
-
-5. **Upload to PyPI**
-   ```bash
-   export UV_PUBLISH_TOKEN=pypi-xxxxx  # Your real PyPI token
-   uv publish
-   ```
-
-6. **Create Git Tag**
-   ```bash
-   git tag v0.1.0
-   git push origin main
-   git push origin v0.1.0
-   ```
-
-### Option 2: GitHub Release (Recommended)
-
-1. **Set up Trusted Publishing** on PyPI:
-   - Go to https://pypi.org/manage/account/publishing/
-   - Add a new publisher:
-     - PyPI Project Name: `tenzir-mcp`
-     - Owner: `tenzir`
-     - Repository: `mcp`
-     - Workflow: `publish.yml`
-     - Environment: `pypi`
-
-2. **Set up GitHub Environment**:
-   - Go to Settings → Environments in your GitHub repo
-   - Create `pypi` environment with:
-     - Protection rules (optional)
-     - Reviewers (optional)
-
-3. **Update Version and Changelog**
-   ```bash
-   # Update version in pyproject.toml and __init__.py
-   # Update CHANGELOG.md
-   git add -A
-   git commit -m "Release v0.1.0"
+   git commit -m "Release v0.2.0"
    git push origin main
    ```
 
-4. **Create a Release**
-   ```bash
-   # Tag the version
-   git tag v0.1.0
-   git push origin v0.1.0
-   ```
-   
-   Then on GitHub:
-   - Go to Releases → Create Release
-   - Choose the tag `v0.1.0`
-   - Title: `v0.1.0`
-   - Description: Copy from CHANGELOG.md
-   - Click "Publish release"
-   
-   GitHub Actions will automatically:
-   - Build the package
-   - Run tests
-   - Publish to PyPI
+3. **Create Tag**
 
-## Version Bumping
-
-We follow [Semantic Versioning](https://semver.org/):
-- **MAJOR** version for incompatible API changes
-- **MINOR** version for backwards-compatible functionality additions  
-- **PATCH** version for backwards-compatible bug fixes
-
-Before each release:
-
-1. Update version in:
-   - `pyproject.toml`
-   - `src/tenzir_mcp/__init__.py`
-
-2. Update CHANGELOG.md:
-   ```markdown
-   ## [0.2.0] - 2024-01-15
-   
-   ### Added
-   - New feature X
-   
-   ### Fixed
-   - Bug Y
-   ```
-
-3. Commit:
-   ```bash
-   git commit -am "Bump version to 0.2.0"
-   ```
-
-4. Tag:
    ```bash
    git tag v0.2.0
+   git push origin v0.2.0
    ```
 
-5. Push:
+4. **Create GitHub Release**
+   - Go to [Releases](https://github.com/tenzir/mcp/releases) → "Create Release"
+   - Select the tag (e.g., `v0.2.0`)
+   - Title: `v0.2.0`
+   - Write release notes describing changes
+   - Click "Publish release"
+
+   **Automated Actions:**
+   - PyPI package published via trusted publishing
+   - Docker images pushed to `ghcr.io/tenzir/mcp` and `docker.io/tenzir/mcp`
+   - Installation verification runs
+
+5. **Verify Release**
+
    ```bash
-   git push && git push --tags
+   # Test PyPI package (wait ~5 minutes)
+   uvx tenzir-mcp@latest --version
+
+   # Check Docker images
+   docker pull ghcr.io/tenzir/mcp:latest
    ```
 
-## Post-Release Verification
+## Version Numbering
+
+Follow [Semantic Versioning](https://semver.org/):
+
+- **MAJOR**: Breaking API changes
+- **MINOR**: New features (backwards-compatible)
+- **PATCH**: Bug fixes (backwards-compatible)
+
+## Pre-release Checklist
+
+- [ ] Tests passing: `make test`
+- [ ] All checks passing: `make check`
+- [ ] Version bumped in both files
+
+## If Something Goes Wrong
+
+### Yank a Bad Release
 
 ```bash
-# Wait a few minutes for PyPI to update, then:
-
-# Install from PyPI
-uv tool run tenzir-mcp --version
-
-# Verify it's the correct version
-python -c "import tenzir_mcp; print(tenzir_mcp.__version__)"
-
-# Check PyPI page
-open https://pypi.org/project/tenzir-mcp/
+# Via PyPI web interface, or:
+pip install twine
+twine yank tenzir-mcp==0.2.0
 ```
 
-## Troubleshooting
-
-### Build Issues
-
-```bash
-# Clean all build artifacts
-rm -rf dist/ build/ *.egg-info src/*.egg-info
-
-# Rebuild
-uv build
-```
-
-### Upload Issues
-
-```bash
-# Check your token is correct
-echo $UV_PUBLISH_TOKEN
-
-# Try verbose mode
-uv publish --verbose
-```
-
-### Installation Issues
-
-```bash
-# Clear pip cache
-uv cache clean
-
-# Try installing with --force-reinstall
-uv pip install --force-reinstall tenzir-mcp
-```
-
-## Rollback Procedure
-
-If a release has critical issues:
-
-1. **Yank the Release on PyPI** (doesn't delete, just marks as "don't use"):
-   ```bash
-   # Via PyPI web interface, or:
-   pip install twine
-   twine yank tenzir-mcp==0.1.0
-   ```
-
-2. **Fix the Issue**
-
-3. **Release a Patch Version**:
-   ```bash
-   # Bump to 0.1.1
-   # Follow normal release process
-   ```
-
-## Release Schedule
-
-- **Patch releases**: As needed for bug fixes
-- **Minor releases**: Monthly or when significant features are ready
-- **Major releases**: When breaking changes are necessary
-
-## Checklist
-
-### Pre-release Checklist
-- [ ] All tests passing: `uv run pytest`
-- [ ] Code formatted: `uv run black src/ tests/`
-- [ ] Imports sorted: `uv run isort src/ tests/`
-- [ ] Linting clean: `uv run ruff check src/ tests/`
-- [ ] Type checking passes: `uv run mypy src/`
-- [ ] CHANGELOG.md updated
-- [ ] Version bumped in pyproject.toml
-- [ ] Version bumped in __init__.py
-- [ ] Documentation updated if needed
-
-### Release Checklist
-- [ ] Package builds: `uv build`
-- [ ] TestPyPI upload works
-- [ ] TestPyPI installation works
-- [ ] Git tag created
-- [ ] GitHub Release created
-- [ ] PyPI upload successful
-- [ ] PyPI installation works
-- [ ] Announcement made (if applicable)
-
-### Post-release Checklist  
-- [ ] Verify package on PyPI
-- [ ] Test installation with uv tool run
-- [ ] Update any external documentation
-- [ ] Close related GitHub issues
-- [ ] Plan next release milestones
+Then fix the issue and release a patch version (e.g., 0.2.1).
