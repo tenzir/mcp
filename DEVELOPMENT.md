@@ -37,11 +37,11 @@ These commands run the MCP server directly from source.
 
 For more control, there are several ways to run the MCP server:
 
-#### Method 1: Using uv tool run with local path (Quickest for testing)
+#### Method 1: Using uvx with local path (Quickest for testing)
 
 ```bash
 # From within the project directory
-uv tool run --from . tenzir-mcp --help
+uvx --from . tenzir-mcp --help
 ```
 
 #### Method 2: Using uv run (Recommended for development)
@@ -94,6 +94,7 @@ make install-dev
 ```
 
 This command handles:
+
 - Creating a virtual environment (if needed)
 - Installing the package in editable mode
 - Installing all development dependencies
@@ -117,6 +118,7 @@ make lint
 ```
 
 This command runs the following tools automatically:
+
 - **black**: Code formatting check
 - **isort**: Import sorting check
 - **ruff**: Linting and code quality
@@ -236,6 +238,7 @@ make clean
 ```
 
 This removes:
+
 - `dist/` directory (built packages)
 - `build/` directory
 - `.egg-info` directories
@@ -252,7 +255,7 @@ This removes:
 make verify-install
 ```
 
-This tests the package installation using `uv tool run`.
+This tests the package installation using `uvx`.
 
 For detailed testing:
 
@@ -267,8 +270,8 @@ uv pip install dist/tenzir_mcp-*.whl
 # Test it works
 tenzir-mcp --help
 
-# Test with uv tool run
-uv tool run --from dist/tenzir_mcp-*.whl tenzir-mcp --help
+# Test with uvx
+uvx --from dist/tenzir_mcp-*.whl tenzir-mcp --help
 
 # Clean up
 deactivate
@@ -321,6 +324,7 @@ uv run tenzir-mcp
 ### Using VS Code
 
 1. Create `.vscode/launch.json`:
+
 ```json
 {
   "version": "0.2.0",
@@ -371,12 +375,14 @@ uv pip install types-requests types-pyyaml
 ### Local Development Setup
 
 1. Build and install locally:
+
 ```bash
 uv build
 uv tool install tenzir-mcp --from dist/tenzir_mcp-*.whl
 ```
 
 2. Configure Claude Desktop:
+
 ```json
 {
   "mcpServers": {
@@ -394,6 +400,7 @@ uv tool install tenzir-mcp --from dist/tenzir_mcp-*.whl
 For rapid iteration:
 
 1. Use the source directly:
+
 ```json
 {
   "mcpServers": {
