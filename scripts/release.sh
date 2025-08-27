@@ -258,11 +258,15 @@ main() {
         print_info "Updating version to $new_version..."
         update_version "$current_version" "$new_version"
         
+        # Update lock file to reflect new version
+        print_info "Updating uv.lock..."
+        uv lock --quiet
+        
         # Run checks
         print_info "Running pre-release checks..."
         if ! make check; then
             print_error "Pre-release checks failed. Rolling back changes..."
-            git checkout -- "$PYPROJECT_FILE" "$INIT_FILE"
+            git checkout -- "$PYPROJECT_FILE" "$INIT_FILE" uv.lock
             exit 1
         fi
         
@@ -274,6 +278,10 @@ main() {
         # Commit changes
         print_info "Committing version bump..."
         git add "$PYPROJECT_FILE" "$INIT_FILE"
+        # Add uv.lock if it exists and has changes
+        if [[ -f "uv.lock" ]] && ! git diff --quiet uv.lock; then
+            git add uv.lock
+        fi
         git commit -m "Release v$new_version"
         
         # Push branch
