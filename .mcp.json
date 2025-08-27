@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "tenzir": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "run",
+        "--project",
+        ".",
+        "tenzir-mcp"
+      ],
+      "env": {
+        "DEBUG": "1"
+      }
+    }
+  }
+}
