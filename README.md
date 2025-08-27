@@ -4,67 +4,19 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 A [Model Context Protocol](https://modelcontextprotocol.io) server for
-[Tenzir](https://tenzir.com) that enables AI assistants to interact with
-security data pipelines and map data to the [Open Cybersecurity Schema
-Framework (OCSF)](https://ocsf.io).
+[Tenzir](https://tenzir.com) that enables AI agents to interact with
+Tenzir.
 
-## Installation
+### Getting started
 
-### Prerequisites
-
-The MCP server requires [Tenzir](https://tenzir.com) to be installed and available in your `$PATH`:
+The fastest way to get started is using Docker:
 
 ```sh
-# Check if Tenzir is installed
-tenzir --version
+docker run -i tenzir/mcp
 ```
 
-If not installed, follow the
-[documentation](https://docs.tenzir.com/guides/node-setup/deploy-a-node) or just
-run:
-
-```sh
-curl https://get.tenzir.app | sh
-```
-
-### Quick Test
-
-Run without installation:
-
-```sh
-uvx tenzir-mcp --help
-```
-
-## Usage with Claude
-
-### Claude Desktop
-
-Add the server to your Claude Desktop app configuration:
-
-```json
-{
-  "mcpServers": {
-    "tenzir": {
-      "command": "uv",
-      "args": ["tool", "run", "tenzir-mcp"]
-    }
-  }
-}
-```
-
-### Claude Code
-
-Use the Claude MCP CLI to add the server:
-
-```sh
-# For production use (from PyPI)
-claude mcp add tenzir --scope user -- uvx tenzir-mcp
-
-# For development (from source)
-claude mcp add tenzir --scope user -- uv run --project $(pwd) tenzir-mcp
-```
-
-Don't forget to restart Claude after making changes to the server.
+> [!TIP]
+> For detailed setup instructions, see the [official documentation](https://docs.tenzir.com/guides/mcp-setup/install-mcp-server).
 
 ## Development
 
