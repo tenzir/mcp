@@ -293,67 +293,107 @@ main() {
             printf "${GREEN}✓ Pull request created!${NC}\n"
             printf "PR: %s\n" "$pr_url"
             
-            # Wait for PR to be ready
-            print_info "Waiting for PR checks..."
-            if gh pr checks "$pr_url" --watch; then
-                # Auto-merge if checks pass
-                print_info "Checks passed! Merging PR..."
-                gh pr merge "$pr_url" --squash --auto --delete-branch
+            # Enable auto-merge
+            print_info "Enabling auto-merge for PR..."
+            gh pr merge "$pr_url" --squash --auto --delete-branch
+            
+            # Check if there are required checks
+            print_info "Checking PR status..."
+            local max_wait=300  # 5 minutes max
+            local waited=0
+            local pr_state
+            
+            while [[ $waited -lt $max_wait ]]; do
+                pr_state=$(gh pr view "$pr_url" --json state,mergeable,mergeStateStatus -q '.mergeStateStatus')
                 
-                # Wait for merge
-                print_info "Waiting for PR to merge..."
-                while gh pr view "$pr_url" --json state -q .state | grep -q "OPEN"; do
-                    sleep 2
-                done
-                
-                # Switch back to main and pull
-                print_info "PR merged! Switching to main..."
-                git checkout main
-                git pull origin main
-                
-                # Create and push tag
-                print_info "Creating and pushing tag v$new_version..."
-                git tag "v$new_version"
-                git push origin "v$new_version"
-                
-                # Create draft GitHub release with auto-generated notes
-                print_info "Creating draft GitHub release..."
-                gh release create "v$new_version" \
-                    --draft \
-                    --title "v$new_version" \
-                    --generate-notes \
-                    --notes-start-tag "${previous_tag:-$(git rev-list --max-parents=0 HEAD)}"
-                
-                # Get the release URL
-                release_url="https://github.com/tenzir/mcp/releases/edit/v$new_version"
-                
-                printf "\n"
-                printf "${GREEN}✓ Draft release created!${NC}\n"
-                printf "\n"
-                print_info "Opening browser to edit and publish release..."
-                if command -v open &> /dev/null; then
-                    open "$release_url"
-                elif command -v xdg-open &> /dev/null; then
-                    xdg-open "$release_url"
-                else
-                    printf "Please open this URL to edit and publish the release:\n"
-                    printf "%s\n" "$release_url"
-                fi
-                
-                printf "\n"
-                printf "📝 ${YELLOW}Next steps:${NC}\n"
-                printf "  1. Review the auto-generated release notes\n"
-                printf "  2. Edit as needed (add highlights, breaking changes, etc.)\n"
-                printf "  3. Click 'Publish release' when ready\n"
-                printf "\n"
-                printf "After publishing, verify with:\n"
-                printf "  uvx tenzir-mcp@latest --version\n"
-                printf "  docker pull ghcr.io/tenzir/mcp:latest\n"
-            else
-                print_error "PR checks failed! Please review and fix."
-                printf "PR: %s\n" "$pr_url"
-                exit 1
+                case "$pr_state" in
+                    "CLEAN"|"HAS_HOOKS"|"UNSTABLE")
+                        # Ready to merge
+                        print_info "PR is ready to merge!"
+                        break
+                        ;;
+                    "BLOCKED")
+                        print_warn "PR is blocked - waiting for checks or approvals..."
+                        sleep 5
+                        waited=$((waited + 5))
+                        ;;
+                    "BEHIND")
+                        print_warn "PR branch is behind main - updating..."
+                        gh pr merge "$pr_url" --squash --auto --delete-branch
+                        sleep 5
+                        waited=$((waited + 5))
+                        ;;
+                    *)
+                        # UNKNOWN, DIRTY, or other states
+                        printf "PR merge state: %s - waiting...\\n" "$pr_state"
+                        sleep 5
+                        waited=$((waited + 5))
+                        ;;
+                esac
+            done
+            
+            if [[ $waited -ge $max_wait ]]; then
+                print_warn "Timeout waiting for PR to be ready."
+                printf "\\n"
+                printf "${YELLOW}Manual steps required:${NC}\\n"
+                printf "1. Check PR status: %s\\n" "$pr_url"
+                printf "2. Once merged, run the following commands:\\n"
+                printf "   git checkout main && git pull\\n"
+                printf "   git tag v%s && git push origin v%s\\n" "$new_version" "$new_version"
+                printf "   gh release create v%s --draft --title 'v%s' --generate-notes\\n" "$new_version" "$new_version"
+                exit 0
             fi
+                
+            
+            # Wait for merge
+            print_info "Waiting for PR to merge..."
+            while gh pr view "$pr_url" --json state -q .state | grep -q "OPEN"; do
+                sleep 2
+            done
+            
+            # Switch back to main and pull
+            print_info "PR merged! Switching to main..."
+            git checkout main
+            git pull origin main
+            
+            # Create and push tag
+            print_info "Creating and pushing tag v$new_version..."
+            git tag "v$new_version"
+            git push origin "v$new_version"
+            
+            # Create draft GitHub release with auto-generated notes
+            print_info "Creating draft GitHub release..."
+            gh release create "v$new_version" \
+                --draft \
+                --title "v$new_version" \
+                --generate-notes \
+                --notes-start-tag "${previous_tag:-$(git rev-list --max-parents=0 HEAD)}"
+            
+            # Get the release URL
+            release_url="https://github.com/tenzir/mcp/releases/edit/v$new_version"
+            
+            printf "\n"
+            printf "${GREEN}✓ Draft release created!${NC}\n"
+            printf "\n"
+            print_info "Opening browser to edit and publish release..."
+            if command -v open &> /dev/null; then
+                open "$release_url"
+            elif command -v xdg-open &> /dev/null; then
+                xdg-open "$release_url"
+            else
+                printf "Please open this URL to edit and publish the release:\n"
+                printf "%s\n" "$release_url"
+            fi
+            
+            printf "\n"
+            printf "📝 ${YELLOW}Next steps:${NC}\n"
+            printf "  1. Review the auto-generated release notes\n"
+            printf "  2. Edit as needed (add highlights, breaking changes, etc.)\n"
+            printf "  3. Click 'Publish release' when ready\n"
+            printf "\n"
+            printf "After publishing, verify with:\n"
+            printf "  uvx tenzir-mcp@latest --version\n"
+            printf "  docker pull ghcr.io/tenzir/mcp:latest\n"
         else
             print_warn "GitHub CLI (gh) not found. Please install it:"
             printf "  brew install gh\n"
