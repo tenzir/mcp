@@ -361,9 +361,9 @@ async def ocsf_instructions_generic() -> str:
 
 
 @mcp.tool()
-async def tql_instructions(ctx: Context) -> str:
-    """VERY IMPORTANT: You MUST call this tool BEFORE you write any TQL (once per session)."""
-    result = """
+async def ocsf_instructions() -> str:
+    """Use this when you want to write an OCSF mapping."""
+    return """
 CRITICAL: You MUST follow these phases in EXACT order. Do NOT proceed to the next phase until the current one is COMPLETE, DOCUMENTED, and VERIFIED.
 
 PHASE 0: Requirements Analysis (MANDATORY)
@@ -372,7 +372,7 @@ PHASE 0: Requirements Analysis (MANDATORY)
 - REQUIRED: Identify the data source format, target schema, and key transformation requirements
 - BLOCKING: You MUST state "PHASE 0 COMPLETE" before proceeding
 
-PHASE 1: Input Schema Analysis (MANDATORY) 
+PHASE 1: Input Schema Analysis (MANDATORY)
 - MANDATORY: Document the complete input schema before any coding
 - REQUIRED OUTPUT: Write a structured description of all input fields and formats
 - REQUIRED: Provide at least 3 sample input records with field-by-field breakdown
@@ -401,7 +401,7 @@ PHASE 4: Incremental Pipeline Construction (MANDATORY)
 - MANDATORY EXECUTION: Execute and verify each chunk before adding more
 - REQUIRED TEST POINTS:
   * Chunk 1: Data input + initial parsing (MUST EXECUTE)
-  * Chunk 2: + core transformations (MUST EXECUTE) 
+  * Chunk 2: + core transformations (MUST EXECUTE)
   * Chunk 3: + classification/mapping (MUST EXECUTE)
   * Chunk 4: + final formatting (MUST EXECUTE)
 - REQUIRED: Document schema changes at each step
@@ -455,6 +455,38 @@ CRITICAL NOTES:
 - Operator/function documentation must be read BEFORE first use, not after encountering errors
 - Alternative approach exploration is REQUIRED to ensure optimal solution
     """
+
+
+@mcp.tool()
+async def tql_instructions(ctx: Context) -> str:
+    """VERY IMPORTANT: You MUST call this tool BEFORE you write any TQL (once per session)."""
+    result = """
+    BEFORE you use any operators or functions, you MUST read the associated documentation.
+
+    Follow these phases when writing a TQL pipeline:
+    - PHASE 1: Identify the schema of the input, if possible.
+    - PHASE 2: Identify the key operators and functions from all available ones.
+    - PHASE 3: Write the pipeline.
+    - PHASE 4: MUST match the pipeline against the TQL style guide at `tutorials/learn-idiomatic-tql`.
+    - PHASE 5: Analyze the completed pipeline and note any potential issues or improvements.
+
+    MUST: ALWAYS read and follow the TQL style guide.
+
+    IMPORTANT: Following documentation is important to understand the lanugage:
+    - explanations/language/
+    - explanations/language/types/
+    - explanations/language/statements/
+    - explanations/language/expressions/
+    - explanations/language/programs/
+    - tutorials/learn-idiomatic-tql => Idiomatic style guide for TQL
+    - reference/operators => List of all available operators
+    - reference/functions => List of all available functions
+    """
+#     result += """
+# YOU MUST NOT USE `if x { y } else { z }`.
+# ALSO, YOU MUST NOT USE `x ? y : z`.
+# USE `y if x else z` INSTEAD!
+# """
     return result
 
 
