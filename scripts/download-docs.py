@@ -12,7 +12,6 @@ import tempfile
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict
 
 try:
     import requests
@@ -34,14 +33,14 @@ def log(*args, **kwargs) -> None:
 def get_latest_commit_sha() -> str:
     """Get the latest commit SHA from the docs repository."""
     log("🔄 Fetching latest commit SHA from tenzir/docs")
-    
+
     # Use GitHub token if available (for CI)
     headers = {}
     github_token = os.environ.get("GITHUB_TOKEN")
     if github_token:
         headers["Authorization"] = f"Bearer {github_token}"
         log("   Using GitHub token for authentication")
-    
+
     try:
         response = requests.get(f"{DOCS_REPO}/commits/main", headers=headers, timeout=TIMEOUT)
         response.raise_for_status()
@@ -113,7 +112,7 @@ def extract_docs(archive_content: bytes, docs_dir: Path, commit_sha: str) -> Non
         # Copy only documentation files, preserving directory structure
         docs_dir.mkdir(parents=True, exist_ok=True)
         files_copied = 0
-        
+
         for file_path in extracted_dir.rglob("*"):
             if file_path.is_file() and file_path.suffix.lower() in doc_extensions:
                 rel_path = file_path.relative_to(extracted_dir)
