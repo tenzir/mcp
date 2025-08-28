@@ -1,2 +1,0 @@
-Write a TQL pipeline that reads all CSV files in the "input"
-directory and saves them as JSON in the "output" directory.

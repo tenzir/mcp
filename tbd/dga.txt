@@ -1,5 +1,0 @@
-15-Jan-2024 16:42:18 queries: info: client 192.168.1.105#54321 (qwertyuiop123.com): query: qwertyuiop123.com IN A + (8.8.8.8)
-15-Jan-2024 16:42:19 queries: info: client 192.168.1.105#54321 (asdfghjkl456.net): query: asdfghjkl456.net IN A + (8.8.8.8)
-15-Jan-2024 16:42:19 queries: info: client 192.168.1.105#54321 (zxcvbnm789.org): query: zxcvbnm789.org IN A + (8.8.8.8)
-15-Jan-2024 16:42:20 queries: info: client 192.168.1.105#54321 (poiuytrewq321.com): query: poiuytrewq321.com IN A + (8.8.8.8)
-15-Jan-2024 16:42:20 queries: info: client 192.168.1.105#54321 (mnbvcxzlkj654.net): query: mnbvcxzlkj654.net IN A + (8.8.8.8)
