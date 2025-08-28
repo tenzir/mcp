@@ -132,21 +132,12 @@ async def execute_tql_pipeline(
     timeout: int = 30,
 ) -> str:
     """
-    Execute a TQL (Tenzir Query Language) pipeline.
-
-    Whenever you are writing TQL, you MUST either validate or execute it. If there
-    are no side-effects, execute instead of validate.
-
-    You MUST try to fix all warnings and errors!
+    Execute a TQL pipeline. You MUST use this instead of calling `tenzir` directly.
 
     Args:
         pipeline: The pipeline definition to execute
         is_file: Whether `pipeline` is a path to a file containing the definition
-        input_data: Optional input data as JSON string
         timeout: Execution timeout in seconds (default: 30)
-
-    Returns:
-        Dictionary containing execution results
     """
     request = PipelineRequest(
         pipeline=pipeline, is_file=is_file, input_data=None, timeout=timeout
@@ -458,19 +449,312 @@ CRITICAL NOTES:
 
 
 @mcp.tool()
+async def ocsf_mapping_examples() -> str:
+    """Returns a few OCSF mappings examples following the best practices."""
+    return """
+## Complex OCSF Mapping Examples
+
+### 1. Suricata DNS Activity Mapping
+```tql
+let $rcode_id = {
+  NOERROR: 0,
+  FORMERROR: 1,
+  SERVERROR: 2,
+  NXDOMAIN: 3,
+  NOTIMP: 4,
+  REFUSED: 5,
+  YXDOMAIN: 6,
+  YXRRSET: 7,
+  NXRRSET: 8,
+  NOTAUTH: 9,
+  NOTZONE: 10,
+  DSOTYPENI: 11,
+  BADSIG_VERS: 16,
+  BADKEY: 17,
+  BADTIME: 18,
+  BADMODE: 19,
+  BADNAME: 20,
+  BADALG: 21,
+  BADTRUNC: 22,
+  BADCOOKIE: 23,
+}
+let $rcode = {
+  NOERROR: "NoError",
+  FORMERROR: "FormError",
+  SERVERROR: "ServError",
+  NXDOMAIN: "NXDomain",
+  NOTIMP: "NotImp",
+  REFUSED: "Refused",
+  YXDOMAIN: "YXDomain",
+  YXRRSET: "YXRRSet",
+  NXRRSET: "NXRRSet",
+  NOTAUTH: "NotAuth",
+  NOTZONE: "NotZone",
+  DSOTYPENI: "DSOTYPENI",
+  BADSIG_VERS: "BADSIG_VERS",
+  BADKEY: "BADKEY",
+  BADTIME: "BADTIME",
+  BADMODE: "BADMODE",
+  BADNAME: "BADNAME",
+  BADALG: "BADALG",
+  BADTRUNC: "BADTRUNC",
+  BADCOOKIE: "BADCOOKIE",
+}
+this = { suricata: this }
+// Conditional query handling for different Suricata versions
+has_query = false
+has_response = false
+if suricata.dns.has("queries") {
+  // Version >=8 DNS query logs.
+  ocsf.query = {
+    hostname: suricata.dns.queries.first().rrname,
+    type: suricata.dns.queries.first().rrtype,
+  }
+  has_query = true
+} else {
+  // Version <=7 DNS query logs.
+  ocsf.query = {
+    hostname: move suricata.dns.rrname,
+    type: move suricata.dns.rrtype,
+  }
+  has_query = true
+}
+ocsf.answers = (move suricata.dns.answers).map(answer => {
+  type: answer.rrtype,
+  rdata: answer.rdata,
+  ttl: answer.ttl,
+})
+has_response = ocsf.answers != null and ocsf.answers.length() > 0
+// Dynamic activity ID based on request/response presence
+if (has_query and has_response) {
+  activity_id = 6
+  type_uid = 400306
+} else if (has_query) {
+  activity_id = 1
+  type_uid = 400301
+} else if (has_response) {
+  activity_id = 2
+  type_uid = 400302
+}
+ocsf.type_uid = type_uid
+ocsf.activity_id = activity_id
+ocsf.rcode_id = $rcode_id.get(suricata.dns.rcode, 99)
+ocsf.rcode = $rcode.get(move suricata.dns.rcode, suricata.dns.rcode)
+```
+
+### 2. Zeek Connection State Complex Mapping
+```tql
+// Complex connection state mapping with multiple lookups
+let $conn_states = {
+  // S0 means only a SYN seen and S1 the full handshake.
+  S0: 1,
+  S1: 1,
+  // Only SF means Close.
+  SF: 2,
+  // The RST* states imply connection reset.
+  RSTO: 3,
+  RSTOH: 3,
+  RSTOS0: 3,
+  RSTR: 3,
+  RSTRH: 3,
+  // SH, SHR, S2, and S3 correspond to one-sided closure
+  S2: 4,
+  S3: 4,
+  SH: 4,
+  SHR: 4,
+  // Only REJ is rejection at the beginning of the connection.
+  REJ: 5,
+  // Connections Zeek couldn't classify.
+  OTH: 6,
+}
+let $activity_names = [
+  "Unknown",
+  "Open",
+  "Close",
+  "Reset",
+  "Fail",
+  "Refuse",
+  "Traffic",
+  "Listen",
+  "Other",
+]
+let $proto_nums = {
+  tcp: 6,
+  udp: 17,
+  icmp: 1,
+  icmpv6: 58,
+  ipv6: 41,
+}
+this = { zeek: this }
+ocsf.activity_id = $conn_states[zeek.conn_state]? else 6
+ocsf.activity_name = $activity_names[ocsf.activity_id]? else "Other"
+// Complex direction determination
+if zeek.local_orig? != null and zeek.local_resp? != null {
+  if zeek.local_orig and zeek.local_resp {
+    ocsf.connection_info.direction = "Lateral"
+    ocsf.connection_info.direction_id = 3
+  } else if zeek.local_orig {
+    ocsf.connection_info.direction = "Outbound"
+    ocsf.connection_info.direction_id = 2
+  } else if zeek.local_resp {
+    ocsf.connection_info.direction = "Inbound"
+    ocsf.connection_info.direction_id = 1
+  } else {
+    ocsf.connection_info.direction = "Unknown"
+    ocsf.connection_info.direction_id = 0
+  }
+  drop zeek.local_orig, zeek.local_resp
+}
+// Protocol version detection
+if zeek.id.orig_h.is_v6() or zeek.id.resp_h.is_v6() {
+  ocsf.connection_info.protocol_ver_id = 6
+} else {
+  ocsf.connection_info.protocol_ver_id = 4
+}
+```
+
+### 3. Suricata SMB Activity with Complex File Handling
+```tql
+let $activity_id = {
+  FILE_SUPERSEDE: 1,
+  FILE_OPEN: 2,
+  FILE_CREATE: 3,
+  FILE_OPEN_IF: 4,
+  FILE_OVERWRITE: 5,
+  FILE_OVERWRITE_IF: 6,
+}
+let $activity_name = {
+  FILE_SUPERSEDE: "File Supersede",
+  FILE_OPEN: "File Open",
+  FILE_CREATE: "File Create",
+  FILE_OPEN_IF: "File Open If",
+  FILE_OVERWRITE: "File Overwrite",
+  FILE_OVERWRITE_IF: "File Overwrite If",
+}
+this = { suricata: this }
+ocsf.activity_id = $activity_id.get(suricata.smb.disposition, 99)
+ocsf.activity_name = $activity_name.get(move suricata.smb.disposition, move suricata.smb.command)
+// Complex status code handling
+if suricata.smb.status_code == "0x0" {
+  ocsf.status_id = 1
+  ocsf.status = "Success"
+} else {
+  ocsf.status_id = 99
+  ocsf.status = move suricata.smb.status
+}
+drop suricata.smb.status_code
+// Conditional file information
+if suricata.smb.filename != null {
+  ocsf.file = {
+    type_id: 0,
+    name: move suricata.smb.filename,
+    created_time: (move suricata.smb.created).milliseconds().from_epoch(),
+    modified_time: (move suricata.smb.modified).milliseconds().from_epoch(),
+    accessed_time: (move suricata.smb.accessed).milliseconds().from_epoch(),
+  }
+} else {
+  ocsf.file = null
+}
+```
+
+### 4. Zeek DHCP Multi-Message Mapping
+```tql
+let $msg_types = {
+  DISCOVER: 1,
+  OFFER: 2,
+  REQUEST: 3,
+  DECLINE: 4,
+  ACK: 5,
+  NAK: 6,
+  RELEASE: 7,
+  INFORM: 8,
+}
+this = { zeek: this }
+// Unroll array to create separate events for each DHCP message type
+unroll zeek.msg_types
+ocsf.activity_id = $msg_types[zeek.msg_types] else 0
+if ocsf.activity_id == 0 {
+  ocsf.activity_name = "Other"
+} else {
+  ocsf.activity_name = to_title(move zeek.msg_types)
+}
+// Complex endpoint mapping with fallbacks
+ocsf.src_endpoint = {
+  hostname: move zeek.host_name?,
+  // client_addr is preferred, fallback to assigned_addr
+  ip: move zeek.client_addr? else zeek.assigned_addr?,
+  domain: move zeek.client_fqdn?,
+  mac: move zeek.mac?,
+}
+// Protocol version detection with null handling
+if zeek.id?.resp_h? == null {
+  ocsf.connection_info.protocol_ver_id = 0
+} else if zeek.id.resp_h.is_v6() {
+  ocsf.connection_info.protocol_ver_id = 6
+} else {
+  ocsf.connection_info.protocol_ver_id = 4
+}
+```
+
+### 5. Complex Severity and Status Mapping (Suricata Alert)
+```tql
+this = { suricata: this }
+// Complex severity mapping with fallback
+if suricata.alert.severity == null {
+  ocsf.severity_id = 0
+} else if suricata.alert.severity == 1 {
+  ocsf.severity_id = 4
+} else if suricata.alert.severity == 2 {
+  ocsf.severity_id = 3
+} else if suricata.alert.severity == 3 {
+  ocsf.severity_id = 2
+}
+drop suricata.alert.severity
+// Evidence array construction
+ocsf.evidences = [{
+  src_endpoint: {
+    ip: move suricata.src_ip,
+    port: move suricata.src_port,
+  },
+  dst_endpoint: {
+    ip: move suricata.dest_ip,
+    port: move suricata.dest_port,
+  },
+}]
+// Finding info object with proper UID conversion
+ocsf.finding_info = {
+  uid: (move suricata.flow_id).string(),
+  title: move suricata.alert.category,
+  desc: move suricata.alert.signature,
+}
+```
+
+### Key Patterns in Complex Mappings:
+1. **Lookup Tables**: Use `let` to define mapping dictionaries for codes, statuses, activities
+2. **Conditional Logic**: Complex `if/else` chains for dynamic field assignment
+3. **Fallback Values**: Use `else` operators for graceful degradation
+4. **Array Operations**: `.map()`, `.first()`, `unroll` for array transformations
+5. **Move vs Copy**: Strategic use of `move` to prevent duplication in `unmapped`
+6. **Null Handling**: Check for null values before processing with `?` operator
+7. **Type Conversions**: `.string()`, `.milliseconds().from_epoch()`, `int()` for proper typing
+8. **Complex Object Construction**: Nested objects with conditional fields
+9. **Protocol Detection**: IP version detection patterns
+10. **Status Mapping**: Multi-level status code translation
+"""
+
+
+@mcp.tool()
 async def tql_instructions(ctx: Context) -> str:
-    """VERY IMPORTANT: You MUST call this tool BEFORE you write any TQL (once per session)."""
+    """VERY IMPORTANT: YOU MUST CALL THIS TOOL BEFORE YOU WRITE ANY TQL PIPELINES/MAPPINGS."""
     result = """
-    BEFORE you use any operators or functions, you MUST read the associated documentation.
+    VERY IMPORTANT: BEFORE YOU USE ANY OPERATOR, YOU MUST READ ITS DOCUMENTATION.
+    THIS APPLIES TO ALL SITUATIONS AND EVERY SINGLE OPERATOR. NO EXCEPTIONS!
+    BEFORE YOU USE A FUNCTION, YOU MUST READ ITS DOCUMENTATION.
+    DO NOT USE OPERATORS OR FUNCTIONS WITHOUT READING THEIR DOCUMENTATION.
+    FAILURE TO READ DOCUMENTATION WILL RESULT IN INCORRECT CODE.
+    BEFORE WRITING ANY TQL, MAKE SURE YOU READ THE DOCUMENTATION.
 
-    Follow these phases when writing a TQL pipeline:
-    - PHASE 1: Identify the schema of the input, if possible.
-    - PHASE 2: Identify the key operators and functions from all available ones.
-    - PHASE 3: Write the pipeline.
-    - PHASE 4: MUST match the pipeline against the TQL style guide at `tutorials/learn-idiomatic-tql`.
-    - PHASE 5: Analyze the completed pipeline and note any potential issues or improvements.
-
-    MUST: ALWAYS read and follow the TQL style guide.
+    MUST: ALWAYS read and follow the TQL style guide at tutorials/learn-idiomatic-tql.
 
     IMPORTANT: Following documentation is important to understand the lanugage:
     - explanations/language/
@@ -478,16 +762,34 @@ async def tql_instructions(ctx: Context) -> str:
     - explanations/language/statements/
     - explanations/language/expressions/
     - explanations/language/programs/
-    - tutorials/learn-idiomatic-tql => Idiomatic style guide for TQL
     - reference/operators => List of all available operators
     - reference/functions => List of all available functions
     """
-#     result += """
-# YOU MUST NOT USE `if x { y } else { z }`.
-# ALSO, YOU MUST NOT USE `x ? y : z`.
-# USE `y if x else z` INSTEAD!
-# """
+    #     result += """
+    # YOU MUST NOT USE `if x { y } else { z }`.
+    # ALSO, YOU MUST NOT USE `x ? y : z`.
+    # USE `y if x else z` INSTEAD!
+    # """
     return result
+
+
+@mcp.tool()
+async def on_tql_writing_completion() -> str:
+    """You MUST call this tool when you are done with writing TQL."""
+    return """
+You MUST make sure that:
+- The TQL is valid (execution succeeds without error)
+- There are no warnings
+
+When writing OCSF mappings:
+- All required fields as specified by OCSF were assigned a value
+- The mapping also works when using different values in the input
+- Values in the input that can be mapped to a field are mapped to that field
+- The `unmapped` field does not contain values that were mapped
+- All values that were not mapped remain in `unmapped`
+
+You MUST continue and fix your mistakes in case any of the above is not true!
+""".strip()
 
 
 # @mcp.tool()
