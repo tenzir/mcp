@@ -1,9 +1,8 @@
 """Hatchling build hook to download Tenzir documentation before building."""
 
 import subprocess
-import sys
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 
@@ -13,7 +12,7 @@ class DocsDownloadBuildHook(BuildHookInterface):
 
     PLUGIN_NAME = "docs-download"
 
-    def initialize(self, version: str, build_data: Dict[str, Any]) -> None:
+    def initialize(self, version: str, build_data: dict[str, Any]) -> None:
         """Download docs before building the package."""
         print("🔄 Downloading Tenzir documentation...", flush=True)
 

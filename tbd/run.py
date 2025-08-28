@@ -5,16 +5,13 @@ Also processes .prompt files through Claude Code and generates transcripts.
 """
 
 import json
-import sys
-import os
 import subprocess
-import tempfile
-import threading
+import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
-from typing import Dict, List, Any
 from pathlib import Path
+from typing import Any
 
 
 def format_timestamp(timestamp_ms: int) -> str:
@@ -22,7 +19,7 @@ def format_timestamp(timestamp_ms: int) -> str:
     return datetime.fromtimestamp(timestamp_ms / 1000).strftime("%H:%M:%S")
 
 
-def format_tool_use(tool_use: Dict[str, Any]) -> str:
+def format_tool_use(tool_use: dict[str, Any]) -> str:
     """Format a tool use call for display."""
     tool_name = tool_use.get("name", "unknown")
     tool_input = tool_use.get("input", {})
@@ -43,7 +40,7 @@ def format_tool_use(tool_use: Dict[str, Any]) -> str:
     return f"🔧 {tool_name}()"
 
 
-def format_content(content: List[Dict[str, Any]]) -> str:
+def format_content(content: list[dict[str, Any]]) -> str:
     """Format message content for display."""
     result = []
 
@@ -62,17 +59,15 @@ def format_content(content: List[Dict[str, Any]]) -> str:
     return "\n".join(result)
 
 
-def process_conversation(data: List[Dict[str, Any]]) -> str:
+def process_conversation(data: list[dict[str, Any]]) -> str:
     """Process the conversation data and return a formatted transcript."""
     transcript = []
-    session_info = None
 
     for entry in data:
         entry_type = entry.get("type", "")
 
         if entry_type == "system":
             if entry.get("subtype") == "init":
-                session_info = entry
                 transcript.append("=" * 60)
                 transcript.append("🤖 CLAUDE CODE CONVERSATION")
                 transcript.append("=" * 60)
@@ -165,7 +160,7 @@ def run_claude_on_txt_file_streaming(txt_file: str, output_file: str) -> bool:
     """Run claude command on a txt file and stream the transcript to output file."""
     try:
         # Read the input file
-        with open(txt_file, "r", encoding="utf-8") as f:
+        with open(txt_file, encoding="utf-8") as f:
             txt_content = f.read()
 
         # Start the subprocess
@@ -258,7 +253,7 @@ def process_all_prompt_files():
     print()
 
     print("Processing files in parallel...")
-    
+
     # Track progress
     completed = 0
     total = len(prompt_files)
@@ -290,7 +285,7 @@ def process_all_prompt_files():
 
     # Final summary
     total_elapsed = time.time() - start_time
-    print(f"\n📊 Summary:")
+    print("\n📊 Summary:")
     print(f"  • Total files: {total}")
     print(f"  • Successful: {successful}")
     print(f"  • Failed: {failed}")
@@ -313,7 +308,7 @@ def main():
 
         try:
             # Read the JSON file
-            with open(json_file, "r", encoding="utf-8") as f:
+            with open(json_file, encoding="utf-8") as f:
                 content = f.read().strip()
 
             # Process the conversation

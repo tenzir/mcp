@@ -9,7 +9,7 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 import requests
 
@@ -43,11 +43,11 @@ def fetch_versions() -> list[str]:
         sys.exit(1)
 
 
-def download_schema(version: str) -> Dict[str, Any]:
+def download_schema(version: str) -> dict[str, Any]:
     """Download the raw JSON schema for a specific version."""
     url = f"{SERVER}/{version}/export/schema"
     log(f"Downloading schema for version {version} from {url}")
-    
+
     for attempt in range(3):  # Retry up to 3 times
         try:
             response = requests.get(url, timeout=TIMEOUT)
@@ -70,12 +70,12 @@ def get_data_dir() -> Path:
     return data_dir
 
 
-def save_schema(version: str, schema: Dict[str, Any], data_dir: Path) -> None:
+def save_schema(version: str, schema: dict[str, Any], data_dir: Path) -> None:
     """Save the schema JSON to a file."""
     filename = f"{version}.json"
     filepath = data_dir / filename
     log(f"Saving schema to {filepath}")
-    
+
     with filepath.open("w", encoding="utf-8") as f:
         json.dump(schema, f, indent=2, ensure_ascii=False)
 
@@ -84,12 +84,12 @@ def main() -> None:
     """Main function to download all OCSF schemas."""
     versions = fetch_versions()
     data_dir = get_data_dir()
-    
+
     # Clean up existing files
     log(f"Cleaning existing files in {data_dir}")
     for existing_file in data_dir.glob("*.json"):
         existing_file.unlink()
-    
+
     # Download and save each version
     for version in versions:
         try:
@@ -98,7 +98,7 @@ def main() -> None:
         except Exception as e:
             log(f"Failed to process version {version}: {e}")
             continue
-    
+
     log(f"Successfully downloaded {len(list(data_dir.glob('*.json')))} schema files")
 
 

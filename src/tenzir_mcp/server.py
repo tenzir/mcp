@@ -4,7 +4,7 @@ import logging
 from importlib import resources
 from typing import Any
 
-from fastmcp import FastMCP, Context
+from fastmcp import FastMCP
 from pydantic import BaseModel, Field
 
 from tenzir_mcp.docs import TenzirDocs
@@ -13,6 +13,7 @@ from tenzir_mcp.docs import TenzirDocs
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 mcp = FastMCP(name="Tenzir MCP Server", instructions="...")
+
 
 class PipelineRequest(BaseModel):
     """Request model for pipeline execution."""
@@ -176,64 +177,48 @@ async def validate_tql_pipeline(pipeline: str) -> str:
         return f"Exception: {e}"
 
 
-# @mcp.tool()
-async def get_ocsf_versions() -> list[str]:
+def get_ocsf_versions() -> list[str]:
     """
     Get all available OCSF schema versions.
     """
-    try:
-        # Get the OCSF data directory
-        files = resources.files("tenzir_mcp.data.ocsf")
+    # Get the OCSF data directory
+    files = resources.files("tenzir_mcp.data.ocsf")
 
-        # Extract version numbers from JSON filenames
-        versions = []
-        for file_path in files.iterdir():
-            if file_path.name.endswith(".json"):
-                # Remove .json extension to get version
-                version = file_path.name[:-5]
-                versions.append(version)
+    # Extract version numbers from JSON filenames
+    versions = []
+    for file_path in files.iterdir():
+        if file_path.name.endswith(".json"):
+            # Remove .json extension to get version
+            version = file_path.name[:-5]
+            versions.append(version)
 
-        # Sort versions (simple string sort works for semantic versions)
-        versions.sort()
-        return versions
-
-    except Exception as e:
-        logger.error(f"Failed to get OCSF versions: {e}")
-        return [f"Error: Failed to get OCSF versions: {e}"]
+    # Sort versions (simple string sort works for semantic versions)
+    versions.sort()
+    return versions
 
 
-# @mcp.tool()
-async def default_ocsf_version() -> str:
+def get_newest_ocsf_version() -> str:
     """
     Returns the newest non-development OCSF schema version.
-
-    Call this when you need an OCSF version but the user did not specify one.
     """
-    try:
-        # Get all available versions
-        versions = await get_ocsf_versions.fn()
+    # Get all available versions
+    versions = get_ocsf_versions()
 
-        # Filter out development versions (containing 'dev', 'alpha', 'beta', 'rc')
-        stable_versions: list[str] = []
-        for version in versions:
-            version_lower = version.lower()
-            if not any(
-                dev_marker in version_lower
-                for dev_marker in ["dev", "alpha", "beta", "rc"]
-            ):
-                stable_versions.append(version)
+    # Filter out development versions (containing 'dev', 'alpha', 'beta', 'rc')
+    stable_versions: list[str] = []
+    for version in versions:
+        version_lower = version.lower()
+        if not any(
+            dev_marker in version_lower for dev_marker in ["dev", "alpha", "beta", "rc"]
+        ):
+            stable_versions.append(version)
 
-        if not stable_versions:
-            logger.warning("No stable OCSF versions found")
-            return "Error: No stable OCSF versions found"
+    if not stable_versions:
+        raise RuntimeError("No stable OCSF versions found")
 
-        # Return the last (newest) stable version
-        result: str = stable_versions[-1]
-        return result
-
-    except Exception as e:
-        logger.error(f"Failed to get default OCSF version: {e}")
-        return f"Error: Failed to get default OCSF version: {e}"
+    # Return the last (newest) stable version
+    result: str = stable_versions[-1]
+    return result
 
 
 @mcp.tool()
@@ -788,7 +773,8 @@ When writing OCSF mappings:
 - The `unmapped` field does not contain values that were mapped
 - All values that were not mapped remain in `unmapped`
 
-You MUST continue and fix your mistakes in case any of the above is not true!
+For each of these points, you MUST print a verdict whether they are satisfied.
+For points that are not satisfied, you MUST continue and fix your TQL!s
 """.strip()
 
 

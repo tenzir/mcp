@@ -7,5 +7,6 @@ COPY README.md .
 COPY LICENSE .
 USER root
 RUN uv build
+RUN uv pip install --system --break-system-packages dist/*.whl
 USER tenzir
 ENTRYPOINT ["tenzir-mcp"]
