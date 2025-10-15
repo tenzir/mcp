@@ -307,7 +307,7 @@ main() {
             
             # Check if there are required checks
             print_info "Checking PR status..."
-            local max_wait=300  # 5 minutes max
+            local max_wait=600  # 10 minutes max
             local waited=0
             local pr_state
             
