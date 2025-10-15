@@ -3,7 +3,7 @@ name = "tenzir-mcp"
 version = "0.3.0"
 description = "MCP server for Tenzir"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.14"
 authors = [
     { name = "Tenzir", email = "engineering@tenzir.com" }
 ]
