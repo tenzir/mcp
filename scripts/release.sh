@@ -266,14 +266,14 @@ main() {
         print_info "Running pre-release checks..."
         if ! make check; then
             print_error "Pre-release checks failed. Rolling back changes..."
-            git checkout -- "$PYPROJECT_FILE" "$INIT_FILE" uv.lock
+            git restore "$PYPROJECT_FILE" "$INIT_FILE" uv.lock
             exit 1
         fi
         
         # Create release branch
         local release_branch="release-v$new_version"
         print_info "Creating release branch $release_branch..."
-        git checkout -b "$release_branch"
+        git switch -c "$release_branch"
         
         # Commit changes
         print_info "Committing version bump..."
@@ -346,7 +346,7 @@ main() {
                 printf "${YELLOW}Manual steps required:${NC}\\n"
                 printf "1. Check PR status: %s\\n" "$pr_url"
                 printf "2. Once merged, run the following commands:\\n"
-                printf "   git checkout main && git pull\\n"
+                printf "   git switch main && git pull\\n"
                 printf "   git tag v%s && git push origin v%s\\n" "$new_version" "$new_version"
                 printf "   gh release create v%s --draft --title 'v%s' --generate-notes\\n" "$new_version" "$new_version"
                 exit 0
@@ -361,7 +361,7 @@ main() {
             
             # Switch back to main and pull
             print_info "PR merged! Switching to main..."
-            git checkout main
+            git switch main
             git pull origin main
             
             # Create and push tag
