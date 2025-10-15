@@ -1,9 +1,9 @@
 [project]
 name = "tenzir-mcp"
-version = "0.3.0"
+version = "0.3.1"
 description = "MCP server for Tenzir"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.14"
 authors = [
     { name = "Tenzir", email = "engineering@tenzir.com" }
 ]
@@ -90,6 +90,11 @@ exclude = [
     ".ruff_cache",
 ]
 
+[tool.check-wheel-contents]
+# Ignore W002: Wheel contains duplicate files
+# The changelog next.mdx files have identical placeholder content but serve
+# different purposes (node vs platform changelogs) and are in different paths
+ignore = ["W002"]
 
 [tool.black]
 line-length = 88
