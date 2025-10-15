@@ -90,6 +90,11 @@ exclude = [
     ".ruff_cache",
 ]
 
+[tool.check-wheel-contents]
+# Ignore W002: Wheel contains duplicate files
+# The changelog next.mdx files have identical placeholder content but serve
+# different purposes (node vs platform changelogs) and are in different paths
+ignore = ["W002"]
 
 [tool.black]
 line-length = 88
