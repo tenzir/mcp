@@ -4,15 +4,26 @@ import logging
 from importlib import resources
 from typing import Any
 
-from fastmcp import FastMCP
 from pydantic import BaseModel, Field
 
-from tenzir_mcp.docs import TenzirDocs
+from tenzir_mcp.app import mcp
+from tenzir_mcp.docs import (
+    TenzirDocs,
+    build_related_tree,
+    filter_by_category,
+    format_search_result,
+    load_doc_index,
+    normalize_doc_request,
+)
+from tenzir_mcp.workflows import (  # noqa: F401
+    workflow_ocsf_mapping,
+    workflow_tql_authoring,
+    workflow_tql_completion,
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-mcp = FastMCP(name="Tenzir MCP Server", instructions="...")
 
 
 class PipelineRequest(BaseModel):
@@ -21,7 +32,7 @@ class PipelineRequest(BaseModel):
     pipeline: str = Field(..., description="TQL pipeline definition")
     is_file: bool = Field(..., description="Whether `pipeline` is a path to a file")
     input_data: str | None = Field(None, description="Input data as JSON string")
-    timeout: int = Field(30, description="Execution timeout in seconds")
+    max_execution_time: int = Field(30, description="Execution timeout in seconds")
 
 
 class PipelineResponse(BaseModel):
@@ -29,7 +40,9 @@ class PipelineResponse(BaseModel):
 
     success: bool = Field(..., description="Whether execution was successful")
     output: str = Field(..., description="Pipeline output")
-    execution_time: float = Field(..., description="Execution time in seconds")
+    duration_seconds: float = Field(
+        ..., description="Pipeline execution duration in seconds"
+    )
 
 
 class TenzirPipelineRunner:
@@ -64,7 +77,8 @@ class TenzirPipelineRunner:
 
             try:
                 stdout, stderr = await asyncio.wait_for(
-                    process.communicate(input=stdin_data), timeout=request.timeout
+                    process.communicate(input=stdin_data),
+                    timeout=request.max_execution_time,
                 )
             except asyncio.TimeoutError:
                 process.kill()
@@ -72,8 +86,8 @@ class TenzirPipelineRunner:
                 execution_time = time.time() - start_time
                 return PipelineResponse(
                     success=False,
-                    output=f"Pipeline execution timed out after {request.timeout} seconds",
-                    execution_time=execution_time,
+                    output=f"Pipeline execution timed out after {request.max_execution_time} seconds",
+                    duration_seconds=execution_time,
                 )
 
             execution_time = time.time() - start_time
@@ -82,25 +96,186 @@ class TenzirPipelineRunner:
                 return PipelineResponse(
                     success=True,
                     output=stdout.decode().strip(),
-                    execution_time=execution_time,
+                    duration_seconds=execution_time,
                 )
             else:
                 return PipelineResponse(
                     success=False,
                     output=stdout.decode().strip(),
-                    execution_time=execution_time,
+                    duration_seconds=execution_time,
                 )
 
         except Exception as e:
             execution_time = time.time() - start_time
             logger.error(f"Pipeline execution failed: {e}")
             return PipelineResponse(
-                success=False, output=str(e), execution_time=execution_time
+                success=False, output=str(e), duration_seconds=execution_time
             )
 
 
 # Global pipeline runner instance
 pipeline_runner = TenzirPipelineRunner()
+
+
+@mcp.tool(name="docs_list_operators", tags={"docs", "operators"})
+async def docs_list_operators(category: str | None = None) -> dict[str, Any]:
+    """List TQL operators with optional category filtering."""
+    try:
+        index = load_doc_index()
+        operators = [dict(entry) for entry in index.get("operators", {}).values()]
+        operators = filter_by_category(operators, category)
+        operators.sort(
+            key=lambda item: (
+                item.get("name") or item.get("title") or item.get("path") or ""
+            ).lower()
+        )
+        return {"operators": operators, "count": len(operators)}
+    except Exception as exc:
+        logger.error("Failed to list operators: %s", exc)
+        return {"error": str(exc)}
+
+
+@mcp.tool(name="docs_list_functions", tags={"docs", "functions"})
+async def docs_list_functions(category: str | None = None) -> dict[str, Any]:
+    """List TQL functions with optional category filtering."""
+    try:
+        index = load_doc_index()
+        functions = [dict(entry) for entry in index.get("functions", {}).values()]
+        functions = filter_by_category(functions, category)
+        functions.sort(
+            key=lambda item: (
+                item.get("name") or item.get("title") or item.get("path") or ""
+            ).lower()
+        )
+        return {"functions": functions, "count": len(functions)}
+    except Exception as exc:
+        logger.error("Failed to list functions: %s", exc)
+        return {"error": str(exc)}
+
+
+@mcp.tool(name="docs_search", tags={"docs", "search"})
+async def docs_search(
+    query: str | None = None,
+    search_type: str = "all",
+    limit: int = 10,
+    depth: int = 0,
+    paths: list[str] | None = None,
+) -> dict[str, Any]:
+    """Search documentation metadata and optionally expand See Also relationships."""
+    if depth < 0:
+        return {"error": "Depth must not be negative."}
+    if limit <= 0:
+        return {"error": "Limit must be greater than zero."}
+
+    normalized_type = search_type.lower()
+    valid_types = {"all", "operators", "functions", "tutorials", "docs", "documents"}
+    if normalized_type not in valid_types:
+        return {"error": f"Unsupported search_type '{search_type}'."}
+
+    has_query = bool(query and query.strip())
+    has_paths = bool(paths)
+    if not has_query and not has_paths:
+        return {"error": "Provide a non-empty query or at least one path."}
+
+    try:
+        index = load_doc_index()
+        results: list[dict[str, Any]] = []
+
+        if has_paths:
+            unique_paths = []
+            seen = set()
+            for path in paths or []:
+                normalized = normalize_doc_request(path)
+                if normalized not in seen:
+                    unique_paths.append(normalized)
+                    seen.add(normalized)
+
+            for path in unique_paths[:limit]:
+                node = build_related_tree(path, index, depth, {path})
+                if node:
+                    results.append(node)
+
+        if has_query:
+            query_value = query.strip() if query else ""
+            search_results: list[dict[str, Any]] = []
+            seen_paths: set[str | None] = {item.get("path") for item in results}
+
+            def append_results(
+                entries: list[dict[str, Any]],
+                fallback_type: str,
+            ) -> None:
+                for entry in entries:
+                    candidate = format_search_result(
+                        entry,
+                        entry.get("type", fallback_type),
+                        query_value,
+                    )
+                    if candidate is None:
+                        continue
+                    path_value = candidate.get("path")
+                    if not path_value or path_value in seen_paths:
+                        continue
+                    seen_paths.add(path_value)
+
+                    if depth > 0:
+                        normalized_path = normalize_doc_request(path_value)
+                        related_tree = build_related_tree(
+                            normalized_path,
+                            index,
+                            depth,
+                            {normalized_path},
+                        )
+                        if related_tree:
+                            candidate["see_also"] = related_tree.get("see_also", [])
+                            if related_tree.get("related"):
+                                candidate["related"] = related_tree["related"]
+                    search_results.append(candidate)
+
+            if normalized_type in {"operators", "all"}:
+                append_results(
+                    list(index.get("operators", {}).values()),
+                    "operator",
+                )
+
+            if normalized_type in {"functions", "all"}:
+                append_results(
+                    list(index.get("functions", {}).values()),
+                    "function",
+                )
+
+            if normalized_type in {"tutorials", "all"}:
+                tutorials = []
+                for path_key, entry in index.get("tutorials", {}).items():
+                    candidate = dict(entry)
+                    candidate.setdefault("path", path_key)
+                    tutorials.append(candidate)
+                append_results(tutorials, "tutorial")
+
+            if normalized_type in {"docs", "documents", "all"}:
+                append_results(
+                    list(index.get("documents", {}).values()),
+                    "doc",
+                )
+
+            search_results.sort(key=lambda item: (item["_score"], item["path"]))
+            for item in search_results:
+                item.pop("_score", None)
+                item.setdefault("see_also", [])
+
+            results.extend(search_results[: max(0, limit - len(results))])
+
+        response: dict[str, Any] = {
+            "results": results[:limit],
+            "count": len(results[:limit]),
+        }
+        if has_query:
+            response["query"] = query.strip() if query else ""
+        if has_paths:
+            response["paths"] = unique_paths[:limit]
+        return response
+    except Exception as exc:
+        logger.error("Failed to search documentation: %s", exc)
+        return {"error": str(exc)}
 
 
 def _load_ocsf_schema(version: str) -> dict[str, Any]:
@@ -125,32 +300,26 @@ def _load_ocsf_schema(version: str) -> dict[str, Any]:
     return schema
 
 
-@mcp.tool()
-async def execute_tql_pipeline(
+@mcp.tool(name="pipeline_execute", tags={"pipeline", "tql", "execute"})
+async def pipeline_execute(
     pipeline: str,
     is_file: bool,
     # input_data: str | None = None,
-    timeout: int = 30,
+    max_execution_time: int = 30,
 ) -> str:
-    """
-    Execute a TQL pipeline. You MUST use this tool instead of calling `tenzir`
-    directly.
-
-    Args:
-        pipeline: The pipeline definition to execute is_file: Whether `pipeline`
-        is a path to a file containing the definition timeout: Execution timeout
-        in seconds (default: 30)
-    """
+    """Execute a TQL pipeline through the local `tenzir` binary."""
     request = PipelineRequest(
-        pipeline=pipeline, is_file=is_file, input_data=None, timeout=timeout
+        pipeline=pipeline,
+        is_file=is_file,
+        input_data=None,
+        max_execution_time=max_execution_time,
     )
 
-    # TODO: Rest of the output is useless?
     response = await pipeline_runner.execute_pipeline(request)
     return response.output
 
 
-def get_ocsf_versions() -> list[str]:
+def _list_ocsf_versions() -> list[str]:
     """
     Get all available OCSF schema versions.
     """
@@ -170,12 +339,12 @@ def get_ocsf_versions() -> list[str]:
     return versions
 
 
-def get_newest_ocsf_version() -> str:
+def _latest_stable_ocsf_version() -> str:
     """
     Returns the newest non-development OCSF schema version.
     """
     # Get all available versions
-    versions = get_ocsf_versions()
+    versions = _list_ocsf_versions()
 
     # Filter out development versions (containing 'dev', 'alpha', 'beta', 'rc')
     stable_versions: list[str] = []
@@ -194,11 +363,21 @@ def get_newest_ocsf_version() -> str:
     return result
 
 
-@mcp.tool()
-async def get_ocsf_classes_overview(version: str) -> dict[str, str]:
-    """
-    Get all OCSF event classes and their descriptions.
-    """
+@mcp.tool(name="ocsf_get_versions", tags={"ocsf", "schema"})
+async def ocsf_get_versions() -> list[str]:
+    """List all bundled OCSF schema versions."""
+    return _list_ocsf_versions()
+
+
+@mcp.tool(name="ocsf_get_latest_version", tags={"ocsf", "schema"})
+async def ocsf_get_latest_version() -> str:
+    """Return the latest stable OCSF schema version."""
+    return _latest_stable_ocsf_version()
+
+
+@mcp.tool(name="ocsf_get_classes", tags={"ocsf", "schema"})
+async def ocsf_get_classes(version: str) -> dict[str, str]:
+    """Get all OCSF event classes and their descriptions."""
     try:
         schema = _load_ocsf_schema(version)
 
@@ -224,8 +403,8 @@ async def get_ocsf_classes_overview(version: str) -> dict[str, str]:
         return {"error": f"Failed to get OCSF event classes for version {version}: {e}"}
 
 
-@mcp.tool()
-async def get_ocsf_class(version: str, name: str) -> dict[str, Any]:
+@mcp.tool(name="ocsf_get_class", tags={"ocsf", "schema"})
+async def ocsf_get_class(version: str, name: str) -> dict[str, Any]:
     """Get the definition of a specific OCSF event class."""
     try:
         schema = _load_ocsf_schema(version)
@@ -252,8 +431,8 @@ async def get_ocsf_class(version: str, name: str) -> dict[str, Any]:
         return {"error": f"Failed to get OCSF class {name} for version {version}: {e}"}
 
 
-@mcp.tool()
-async def get_ocsf_object(version: str, name: str) -> dict[str, Any]:
+@mcp.tool(name="ocsf_get_object", tags={"ocsf", "schema"})
+async def ocsf_get_object(version: str, name: str) -> dict[str, Any]:
     """Get the definition of a specific OCSF object."""
     try:
         schema = _load_ocsf_schema(version)
@@ -281,155 +460,8 @@ async def get_ocsf_object(version: str, name: str) -> dict[str, Any]:
         return {"error": f"Failed to get OCSF object {name} for version {version}: {e}"}
 
 
-@mcp.tool()
-async def tql_instructions(ocsf: bool) -> str:
-    """VERY IMPORTANT: YOU MUST CALL THIS TOOL BEFORE YOU WRITE ANY TQL PIPELINES/MAPPINGS.
-
-    Set the `ocsf` paramater to `true` if the user requested you to write a fresh, new OCSF mapping.
-    """
-    if ocsf:
-        return """
-CRITICAL: You MUST follow these phases in EXACT order. Do NOT proceed to the next phase until the current one is COMPLETE, DOCUMENTED, and VERIFIED.
-
-PHASE 0: Requirements Analysis (MANDATORY)
-- MANDATORY: Document the complete task requirements and constraints
-- REQUIRED OUTPUT: Write a structured analysis of what needs to be accomplished
-- REQUIRED: Identify the data source format, target schema, and key transformation requirements
-- BLOCKING: You MUST state "PHASE 0 COMPLETE" before proceeding
-
-PHASE 1: Input Schema Analysis (MANDATORY)
-- MANDATORY: Document the complete input schema before any coding
-- REQUIRED OUTPUT: Write a structured description of all input fields and formats
-- REQUIRED: Provide at least 3 sample input records with field-by-field breakdown
-- BLOCKING: You MUST state "PHASE 1 COMPLETE" before proceeding
-
-PHASE 2: Approach Exploration (MANDATORY NEW PHASE)
-- MANDATORY: Survey at least 3 different technical approaches for the task
-- REQUIRED: For parsing tasks, explore operators like read_grok, read_syslog, read_lines+parsing, from_file
-- REQUIRED: Execute small test samples (3-5 records) of each approach
-- REQUIRED: Document trade-offs, performance, and complexity of each approach
-- REQUIRED: Justify chosen approach with specific reasons
-- BLOCKING: You MUST state "PHASE 2 COMPLETE" with chosen approach before proceeding
-
-PHASE 3: Documentation Review (BLOCKING REQUIREMENT)
-- MANDATORY: Create complete checklist of ALL operators and functions you will use
-- FOR EACH item on checklist:
-  - FIRST: Read its documentation using read_docs tool
-  - THEN: Document its syntax, parameters, and usage notes
-  - MARK: Check off the item on your checklist
-- VIOLATION CHECK: Using ANY operator/function not on pre-approved checklist requires IMMEDIATE restart of Phase 3
-- VERIFICATION: Show completed checklist with all items checked
-- BLOCKING: You MUST state "PHASE 3 COMPLETE" with verified checklist before proceeding
-
-PHASE 4: Incremental Pipeline Construction (MANDATORY)
-- CHUNK RULE: Write pipeline in chunks of maximum 5 operators
-- MANDATORY EXECUTION: Execute and verify each chunk before adding more
-- REQUIRED TEST POINTS:
-  * Chunk 1: Data input + initial parsing (MUST EXECUTE)
-  * Chunk 2: + core transformations (MUST EXECUTE)
-  * Chunk 3: + classification/mapping (MUST EXECUTE)
-  * Chunk 4: + final formatting (MUST EXECUTE)
-- REQUIRED: Document schema changes at each step
-- REQUIRED: Fix any issues before proceeding to next chunk
-- VERIFICATION: Show execution results for each chunk
-- BLOCKING: You MUST state "PHASE 4 COMPLETE" with all chunk verifications before proceeding
-
-PHASE 5: Style Guide Compliance (NON-NEGOTIABLE)
-- MANDATORY: Read tutorials/learn-idiomatic-tql BEFORE any style changes
-- REQUIRED: Explicitly check EVERY line against style guide rules
-- REQUIRED: List specific style guide rules you applied
-- REQUIRED: Preserve all meaningful comments (especially OCSF attribute groups, business logic explanations)
-- BLOCKING: You MUST state "PHASE 5 COMPLETE" with style compliance verification before proceeding
-
-PHASE 6: Integration Testing (MANDATORY NEW PHASE)
-- MANDATORY: Execute complete pipeline on representative sample (minimum 10 records)
-- REQUIRED: Test edge cases (malformed data, missing fields, unusual values)
-- REQUIRED: Verify output schema compliance
-- REQUIRED: Document any limitations or known issues
-- BLOCKING: You MUST state "PHASE 6 COMPLETE" with test results before proceeding
-
-PHASE 7: Critical Analysis (MANDATORY FINAL STEP)
-- REQUIRED: List at least 3 potential improvements with specific implementation suggestions
-- REQUIRED: Identify any performance concerns with proposed solutions
-- REQUIRED: Note any error handling gaps with recommended fixes
-- REQUIRED: Suggest alternative approaches that could be more efficient
-- BLOCKING: You MUST state "PHASE 7 COMPLETE" when finished
-
-ENFORCEMENT MECHANISMS:
-- TodoWrite tool MUST be used to track each phase completion
-- After each phase, EXPLICITLY STATE: "PHASE X COMPLETE" with verification
-- If you proceed without completing a phase, IMMEDIATELY STOP and restart that phase
-- Each BLOCKING requirement must be satisfied before proceeding
-- Violations of any MANDATORY requirement trigger immediate restart of that phase
-
-VERIFICATION REQUIREMENTS:
-- Each phase must produce specific deliverables as listed
-- All execution requirements must show actual results
-- All documentation requirements must be explicitly shown
-- Cannot proceed to next phase without stating "PHASE X COMPLETE"
-
-IMPORTANT DOCUMENTATION PATHS (MUST READ BEFORE USING):
-- tutorials/learn-idiomatic-tql => Idiomatic style guide (MANDATORY READ in Phase 5)
-- reference/operators/* => Individual operator docs (MANDATORY READ in Phase 3)
-- reference/functions/* => Individual function docs (MANDATORY READ in Phase 3)
-- tutorials/map-data-to-ocsf/ => OCSF mapping patterns (MANDATORY for OCSF tasks)
-
-CRITICAL NOTES:
-- Comments explaining business logic, domain mappings, and non-obvious decisions are MANDATORY
-- Incremental execution is NON-NEGOTIABLE - cannot build entire pipeline then test
-- Operator/function documentation must be read BEFORE first use, not after encountering errors
-- Alternative approach exploration is REQUIRED to ensure optimal solution
-""".strip()
-
-    result = """
-    VERY IMPORTANT: BEFORE YOU USE ANY OPERATOR, YOU MUST READ ITS DOCUMENTATION.
-    THIS APPLIES TO ALL SITUATIONS AND EVERY SINGLE OPERATOR. NO EXCEPTIONS!
-    BEFORE YOU USE A FUNCTION, YOU MUST READ ITS DOCUMENTATION.
-    DO NOT USE OPERATORS OR FUNCTIONS WITHOUT READING THEIR DOCUMENTATION.
-    FAILURE TO READ DOCUMENTATION WILL RESULT IN INCORRECT CODE.
-    BEFORE WRITING ANY TQL, MAKE SURE YOU READ THE DOCUMENTATION.
-
-    MUST: ALWAYS read and follow the TQL style guide at tutorials/learn-idiomatic-tql.
-
-    IMPORTANT: Following documentation is important to understand the lanugage:
-    - explanations/language/
-    - explanations/language/types/
-    - explanations/language/statements/
-    - explanations/language/expressions/
-    - explanations/language/programs/
-    - reference/operators => List of all available operators
-    - reference/functions => List of all available functions
-    """
-    #     result += """
-    # YOU MUST NOT USE `if x { y } else { z }`.
-    # ALSO, YOU MUST NOT USE `x ? y : z`.
-    # USE `y if x else z` INSTEAD!
-    # """
-    return result
-
-
-@mcp.tool()
-async def on_tql_writing_completion() -> str:
-    """You MUST call this tool when you are done with writing TQL."""
-    return """
-You MUST make sure that:
-- The TQL is valid (execution succeeds without error)
-- There are no warnings
-
-When writing OCSF mappings:
-- All required fields as specified by OCSF were assigned a value
-- The mapping also works when using different values in the input
-- Values in the input that can be mapped to a field are mapped to that field
-- The `unmapped` field does not contain values that were mapped
-- All values that were not mapped remain in `unmapped`
-
-For each of these points, you MUST print a verdict whether they are satisfied.
-For points that are not satisfied, you MUST continue and fix your TQL!s
-""".strip()
-
-
-@mcp.tool()
-async def read_docs(path: str) -> str:
+@mcp.tool(name="docs_read", tags={"docs", "read"})
+async def docs_read(path: str) -> dict[str, Any]:
     """
     Get documentation for a given path from the docs folder.
 
@@ -463,14 +495,22 @@ async def read_docs(path: str) -> str:
 
         for try_path in possible_paths:
             if docs.exists(try_path):
-                return docs.read_file(try_path)
+                content = docs.read_file(try_path)
+                return {
+                    "path": clean_path or "index",
+                    "resolved_path": try_path,
+                    "content": content,
+                }
 
-        # If not found, list available files to help user
-        return f"Documentation file not found for path '{path}'. Please check the path and try again."
+        # If not found, provide helpful error metadata
+        return {
+            "error": f"Documentation file not found for path '{path}'. Please check the path and try again.",
+            "path": clean_path or path,
+        }
 
     except Exception as e:
         logger.error(f"Failed to get docs markdown for path {path}: {e}")
-        return f"Error retrieving documentation: {e}"
+        return {"error": f"Error retrieving documentation: {e}", "path": path}
 
 
 def main() -> None:

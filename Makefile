@@ -1,4 +1,4 @@
-.PHONY: help install install-dev test test-cov lint format type-check clean build
+.PHONY: help install install-dev test test-cov lint format type-check clean build build-doc-index
 
 help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -47,7 +47,11 @@ clean:  ## Clean all build artifacts
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete
 
+build-doc-index:  ## Build documentation index
+	uv run python scripts/build_doc_index.py
+
 build: clean  ## Build distribution packages
+	$(MAKE) build-doc-index
 	uv build
 	@echo "Built packages:"
 	@ls -la dist/
