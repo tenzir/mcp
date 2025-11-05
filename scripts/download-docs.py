@@ -16,8 +16,18 @@ from pathlib import Path
 try:
     import requests
 except ImportError:
-    print("⚠️  requests library not available - cannot download docs", file=sys.stderr)
+    from logging_utils import get_logger
+
+    get_logger("download-docs").error("requests library not available — cannot download docs.")
     sys.exit(1)
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from logging_utils import get_logger
+
+logger = get_logger("download-docs")
 
 # Configuration
 DOCS_REPO = "https://api.github.com/repos/tenzir/docs"
@@ -25,46 +35,41 @@ DOWNLOAD_URL_TEMPLATE = "https://github.com/tenzir/docs/archive/{}.zip"
 TIMEOUT = 30
 
 
-def log(*args, **kwargs) -> None:
-    """Log a message to stderr."""
-    print(*args, **kwargs, flush=True)
-
-
 def get_latest_commit_sha() -> str:
     """Get the latest commit SHA from the docs repository."""
-    log("🔄 Fetching latest commit SHA from tenzir/docs")
+    logger.info("fetching latest commit sha from tenzir/docs")
 
     # Use GitHub token if available (for CI)
     headers = {}
     github_token = os.environ.get("GITHUB_TOKEN")
     if github_token:
         headers["Authorization"] = f"Bearer {github_token}"
-        log("   Using GitHub token for authentication")
+        logger.info("using github token for authentication")
 
     try:
         response = requests.get(f"{DOCS_REPO}/commits/main", headers=headers, timeout=TIMEOUT)
         response.raise_for_status()
         commit_data = response.json()
         sha = commit_data["sha"]
-        log(f"   Latest commit SHA: {sha[:8]}")
+        logger.success("latest commit sha: %s", sha[:8])
         return sha
     except requests.RequestException as e:
-        log(f"⚠️  Error fetching commit SHA: {e}")
+        logger.error("error fetching commit sha: %s", e)
         sys.exit(1)
 
 
 def download_docs_archive(commit_sha: str) -> bytes:
     """Download the docs repository as a ZIP archive."""
     download_url = DOWNLOAD_URL_TEMPLATE.format(commit_sha)
-    log(f"🔄 Downloading docs archive from {download_url}")
+    logger.info("downloading docs archive from %s", download_url)
 
     try:
         response = requests.get(download_url, timeout=TIMEOUT)
         response.raise_for_status()
-        log(f"   Downloaded {len(response.content)} bytes")
+        logger.success("downloaded %s bytes", len(response.content))
         return response.content
     except requests.RequestException as e:
-        log(f"⚠️  Error downloading docs archive: {e}")
+        logger.error("error downloading docs archive: %s", e)
         sys.exit(1)
 
 
@@ -78,11 +83,11 @@ def get_docs_dir() -> Path:
 
 def extract_docs(archive_content: bytes, docs_dir: Path, commit_sha: str) -> None:
     """Extract docs from the ZIP archive to the target directory."""
-    log(f"🔄 Extracting docs to {docs_dir}")
+    logger.info("extracting docs to %s", docs_dir)
 
     # Clean existing docs directory
     if docs_dir.exists():
-        log("   Cleaning existing docs directory")
+        logger.info("cleaning existing docs directory")
         shutil.rmtree(docs_dir)
 
     # Define documentation file extensions to keep
@@ -103,11 +108,11 @@ def extract_docs(archive_content: bytes, docs_dir: Path, commit_sha: str) -> Non
         # Find the extracted directory (should be docs-{sha})
         extracted_dirs = [d for d in temp_path.iterdir() if d.is_dir() and d.name.startswith("docs-")]
         if not extracted_dirs:
-            log("⚠️  Error: Could not find extracted docs directory")
+            logger.error("could not find extracted docs directory")
             sys.exit(1)
 
         extracted_dir = extracted_dirs[0]
-        log(f"   Found extracted directory: {extracted_dir.name}")
+        logger.info("found extracted directory: %s", extracted_dir.name)
 
         # Copy only documentation files, preserving directory structure
         docs_dir.mkdir(parents=True, exist_ok=True)
@@ -121,7 +126,7 @@ def extract_docs(archive_content: bytes, docs_dir: Path, commit_sha: str) -> Non
                 shutil.copy2(file_path, dest_path)
                 files_copied += 1
 
-        log(f"   Filtered extraction: kept {files_copied} documentation files (.md, .mdx, .mdoc)")
+        logger.info("filtered extraction: kept %s documentation files (.md, .mdx, .mdoc)", files_copied)
 
     # Create a metadata file with commit info
     metadata = {
@@ -134,7 +139,7 @@ def extract_docs(archive_content: bytes, docs_dir: Path, commit_sha: str) -> Non
     with metadata_file.open("w", encoding="utf-8") as f:
         __import__("json").dump(metadata, f, indent=2)
 
-    log(f"   Created metadata file: {metadata_file}")
+    logger.success("created metadata file: %s", metadata_file)
 
 
 def count_files(directory: Path) -> int:
@@ -151,13 +156,13 @@ def main() -> None:
         extract_docs(archive_content, docs_dir, commit_sha)
 
         file_count = count_files(docs_dir)
-        log(f"✅ Successfully downloaded docs with {file_count} files to {docs_dir}")
+        logger.success("downloaded docs with %s files to %s", file_count, docs_dir)
 
     except KeyboardInterrupt:
-        log("⚠️  Download cancelled by user")
+        logger.warning("download cancelled by user")
         sys.exit(1)
     except Exception as e:
-        log(f"⚠️  Unexpected error: {e}")
+        logger.error("unexpected error: %s", e)
         sys.exit(1)
 
 

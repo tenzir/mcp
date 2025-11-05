@@ -200,10 +200,7 @@ def lookup_doc(path: str, index: dict[str, Any]) -> dict[str, Any] | None:
 
 def infer_doc_type(path: str) -> str:
     """Infer a document type from its normalized path."""
-    if path.startswith("reference/operators/"):
-        return "operator"
-    if path.startswith("reference/functions/"):
-        return "function"
+    # Top-level categories
     if path.startswith("tutorials/"):
         return "tutorial"
     if path.startswith("guides/"):
@@ -212,6 +209,25 @@ def infer_doc_type(path: str) -> str:
         return "explanation"
     if path.startswith("integrations/"):
         return "integration"
+
+    # Reference subcategories
+    if path.startswith("reference/operators/"):
+        return "operator"
+    if path.startswith("reference/functions/"):
+        return "function"
+    if path.startswith("reference/mcp-server/"):
+        return "mcp"
+    if path.startswith("reference/node/"):
+        return "api"
+    if path.startswith("reference/platform/"):
+        return "api"
+    if path.startswith("reference/test-framework/"):
+        return "test"
+    if path.startswith("reference/changelog-framework/"):
+        return "changelog"
+    if path.startswith("reference/"):
+        return "reference"
+
     return "doc"
 
 

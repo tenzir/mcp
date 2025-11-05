@@ -3,7 +3,7 @@ name = "tenzir-mcp"
 version = "0.3.1"
 description = "MCP server for Tenzir"
 readme = "README.md"
-requires-python = ">=3.10,<3.14"
+requires-python = ">=3.12"
 authors = [
     { name = "Tenzir", email = "engineering@tenzir.com" }
 ]
@@ -28,8 +28,6 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Security",
@@ -44,6 +42,7 @@ dependencies = [
     "pydantic>=2.0.0",
     "httpx>=0.25.0",
     "python-dotenv>=1.0.0",
+    "tenzir-test>=0.12.0",
 ]
 
 
@@ -61,13 +60,11 @@ tenzir-mcp = "tenzir_mcp.server:main"
 requires = ["hatchling>=1.21.0"]
 build-backend = "hatchling.build"
 
-[tool.hatch.build.hooks.custom]
-path = "scripts/build_hook.py"
-
 [tool.hatch.build.targets.wheel]
 packages = ["src/tenzir_mcp"]
 artifacts = [
     "src/tenzir_mcp/data/docs/**/*",
+    "src/tenzir_mcp/data/docs.db",
 ]
 
 [tool.hatch.build.targets.sdist]
@@ -81,6 +78,7 @@ include = [
 ]
 artifacts = [
     "src/tenzir_mcp/data/docs/**/*",
+    "src/tenzir_mcp/data/docs.db",
 ]
 exclude = [
     "*.pyc",
@@ -98,7 +96,7 @@ ignore = ["W002"]
 
 [tool.black]
 line-length = 88
-target-version = ['py310', 'py311', 'py312']
+target-version = ['py312', 'py313']
 include = '\.pyi?$'
 extend-exclude = '''
 /(
@@ -121,7 +119,7 @@ line_length = 88
 known_first_party = ["tenzir_mcp"]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -136,7 +134,7 @@ warn_unreachable = true
 strict_equality = true
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py312"
 line-length = 88
 src = ["src"]
 
@@ -145,7 +143,6 @@ select = [
     "E",  # pycodestyle errors
     "W",  # pycodestyle warnings
     "F",  # pyflakes
-    "I",  # isort
     "B",  # flake8-bugbear
     "C4", # flake8-comprehensions
     "UP", # pyupgrade
@@ -211,4 +208,5 @@ dev = [
     "isort>=5.12.0",
     "mypy>=1.5.0",
     "ruff>=0.1.0",
+    "types-pyyaml>=6.0.12.20250915",
 ]

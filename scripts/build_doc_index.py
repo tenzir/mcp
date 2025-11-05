@@ -10,10 +10,19 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from logging_utils import get_logger
+
+logger = get_logger("build-doc-index")
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DOCS_ROOT = (
@@ -149,10 +158,8 @@ def _normalize_doc_path(resolved: Path, docs_root: Path) -> str:
 
 
 def _classify_doc(normalized_path: str) -> str:
-    if normalized_path.startswith("reference/operators/"):
-        return "operator"
-    if normalized_path.startswith("reference/functions/"):
-        return "function"
+    """Classify a document based on its path structure."""
+    # Top-level categories
     if normalized_path.startswith("tutorials/"):
         return "tutorial"
     if normalized_path.startswith("guides/"):
@@ -161,6 +168,25 @@ def _classify_doc(normalized_path: str) -> str:
         return "explanation"
     if normalized_path.startswith("integrations/"):
         return "integration"
+
+    # Reference subcategories
+    if normalized_path.startswith("reference/operators/"):
+        return "operator"
+    if normalized_path.startswith("reference/functions/"):
+        return "function"
+    if normalized_path.startswith("reference/mcp-server/"):
+        return "mcp"
+    if normalized_path.startswith("reference/node/"):
+        return "api"  # Node API
+    if normalized_path.startswith("reference/platform/"):
+        return "api"  # Platform API
+    if normalized_path.startswith("reference/test-framework/"):
+        return "test"
+    if normalized_path.startswith("reference/changelog-framework/"):
+        return "changelog"
+    if normalized_path.startswith("reference/"):
+        return "reference"  # Other reference docs
+
     return "doc"
 
 
@@ -310,12 +336,12 @@ def build_index() -> dict[str, Any]:
 def main() -> None:
     index = build_index()
     OUTPUT_PATH.write_text(json.dumps(index, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(
-        "Generated documentation index with "
-        f"{index['metadata']['operator_count']} operators, "
-        f"{index['metadata']['function_count']} functions, "
-        f"{index['metadata']['tutorial_count']} tutorials, "
-        f"and {index['metadata']['cross_link_count']} cross-links.",
+    logger.success(
+        "generated documentation index with %s operators, %s functions, %s tutorials, and %s cross-links",
+        index['metadata']['operator_count'],
+        index['metadata']['function_count'],
+        index['metadata']['tutorial_count'],
+        index['metadata']['cross_link_count'],
     )
 
 

@@ -1,4 +1,4 @@
-.PHONY: help install install-dev test test-cov lint format type-check clean build build-doc-index
+.PHONY: help install install-dev test test-cov lint format type-check clean build build-doc-index build-doc-db
 
 help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -50,8 +50,13 @@ clean:  ## Clean all build artifacts
 build-doc-index:  ## Build documentation index
 	uv run python scripts/build_doc_index.py
 
+build-doc-db: build-doc-index  ## Build SQLite documentation database
+	uv run python scripts/build_doc_db.py
+
 build: clean  ## Build distribution packages
+	$(MAKE) update-docs
 	$(MAKE) build-doc-index
+	$(MAKE) build-doc-db
 	uv build
 	@echo "Built packages:"
 	@ls -la dist/
@@ -77,3 +82,6 @@ update-docs:  ## Update Tenzir documentation
 
 check-tenzir:  ## Check if Tenzir is available
 	tenzir --version || echo "Tenzir not found in PATH"
+
+test-search:  ## Test documentation search (usage: make test-search QUERY="your query")
+	uv run python scripts/test_search.py "$(QUERY)"
