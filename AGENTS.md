@@ -84,36 +84,15 @@ The server is organized into category-based modules:
 
 ### MCP Tools
 
-#### Execution (🔴)
+For detailed information about available MCP tools, their usage guidelines, and best practices, see [src/tenzir_mcp/prompts/system.md](src/tenzir_mcp/prompts/system.md).
 
-- `run_pipeline` – Execute a TQL pipeline using the local `tenzir` binary.
-- `run_test` – Execute tenzir-test on a test file with optional passthrough/update modes.
+The tools are organized into these categories:
 
-#### Documentation (🟢)
-
-- `docs_read` – Read documentation content from any path (including `/reference/operators`, `/reference/functions`).
-- `docs_search` – Keyword search with See Also traversal across operators, functions, tutorials, and docs.
-
-#### OCSF (🟡)
-
-- `ocsf_get_versions` – List available OCSF schema versions.
-- `ocsf_get_latest_version` – Return the latest stable OCSF version.
-- `ocsf_get_classes` – Retrieve class names and descriptions for a schema version.
-- `ocsf_get_class` – Return a specific OCSF class definition.
-- `ocsf_get_object` – Return an OCSF object definition.
-
-#### Packaging (🔵)
-
-- `package_create` – Create a new package scaffold with interactive metadata elicitation.
-- `package_add_operator` – Add a user-defined operator (UDO) to a package.
-- `package_add_context` – Add a context entry to package.yaml.
-- `package_add_test` – Add a test file with frontmatter and baseline.
-- `package_add_changelog` – Add a changelog entry (breaking, change, bugfix, or feature).
-
-#### Coding (⚪️)
-
-- `make_parser` – Generate a TQL parser from sample log events (supports JSON, CSV, syslog, KV formats).
-- `make_ocsf_mapping` – Generate a complete OCSF mapping package from sample events.
+- **Execution (🔴)** – Pipeline and test execution
+- **Documentation (🟢)** – Documentation search and retrieval
+- **OCSF (🟡)** – OCSF schema queries
+- **Packaging (🔵)** – Package creation and management
+- **Coding (⚪️)** – Code generation for parsers and OCSF mappings
 
 ## Best Practices
 
