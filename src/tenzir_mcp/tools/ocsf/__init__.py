@@ -1,10 +1,10 @@
 """OCSF schema tools."""
 
-from .get_class import ocsf_get_class
-from .get_classes import ocsf_get_classes
-from .get_latest_version import ocsf_get_latest_version
-from .get_object import ocsf_get_object
-from .get_versions import ocsf_get_versions
+from .ocsf_get_class import ocsf_get_class
+from .ocsf_get_classes import ocsf_get_classes
+from .ocsf_get_latest_version import ocsf_get_latest_version
+from .ocsf_get_object import ocsf_get_object
+from .ocsf_get_versions import ocsf_get_versions
 
 __all__ = [
     "ocsf_get_versions",

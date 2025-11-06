@@ -8,7 +8,7 @@ from fastmcp.tools.tool import ToolResult
 from pydantic import Field
 
 from tenzir_mcp.server import mcp
-from tenzir_mcp.tools.coding.parser import (
+from tenzir_mcp.tools.coding.make_parser import (
     _detect_csv_delimiter,
     _infer_schema,
     _score_csv,

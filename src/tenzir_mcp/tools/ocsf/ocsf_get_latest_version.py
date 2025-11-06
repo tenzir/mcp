@@ -4,7 +4,7 @@ from fastmcp.tools.tool import ToolResult
 
 from tenzir_mcp.server import mcp
 
-from .get_versions import list_ocsf_versions
+from .ocsf_get_versions import list_ocsf_versions
 
 
 def latest_stable_ocsf_version() -> str:
