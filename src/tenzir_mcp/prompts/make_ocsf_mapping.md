@@ -67,6 +67,10 @@ You MUST state "Phase 1 complete" before proceeding.
      // --- Epilogue ---------------------------------
      ```
    - Populate all required OCSF fields
+   - Take particular note of the OCSF `metadata` object:
+     - `log_name`: Populate only when unambiguous statically or when in data
+     - `product`: Populate from the log or fill statically
+     - `uid`: Attempt to extract a unique event ID from the data
    - Add comments explaining non-obvious field mappings
 3. Use the `package_add_operator` tool to add the TQL code for the OCSF mapping:
    - Pass as `name` parameter `ocsf::X`
