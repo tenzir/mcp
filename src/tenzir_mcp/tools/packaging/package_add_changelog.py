@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
     },
 )
 async def package_add_changelog(
-    package: Annotated[str, Field(description="Path to the package directory")],
+    package_dir: Annotated[str, Field(description="Path to the package directory")],
     type: Annotated[
         str, Field(description="The entry type: breaking, change, bugfix, or feature")
     ],
@@ -45,8 +45,8 @@ async def package_add_changelog(
             )
 
         # Validate package directory
-        validate_package_dir(package)
-        pkg_path = Path(package)
+        validate_package_dir(package_dir)
+        pkg_path = Path(package_dir)
 
         # Create changelog directory if needed
         changelog_dir = pkg_path / "changelog"

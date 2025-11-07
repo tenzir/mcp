@@ -30,16 +30,18 @@ logger = logging.getLogger(__name__)
     },
 )
 async def package_create(
-    directory: Annotated[str, Field(description="Directory path for the new package")],
+    package_dir: Annotated[
+        str, Field(description="Directory path for the new package")
+    ],
     ctx: Any = None,
 ) -> ToolResult:
     """Create a new Tenzir package scaffold."""
     try:
-        pkg_path = Path(directory).resolve()
+        pkg_path = Path(package_dir).resolve()
 
         # Validate directory doesn't exist
         if pkg_path.exists():
-            error_msg = f"Directory {directory} already exists"
+            error_msg = f"Directory {package_dir} already exists"
             return ToolResult(
                 content=f"Error: {error_msg}", structured_content={"error": error_msg}
             )
@@ -170,5 +172,5 @@ tenzir-ctl install {package_id}
         logger.error(error_msg)
         return ToolResult(
             content=f"Error: {error_msg}",
-            structured_content={"error": error_msg, "directory": directory},
+            structured_content={"error": error_msg, "directory": package_dir},
         )

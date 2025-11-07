@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
     },
 )
 async def package_add_context(
-    package: Annotated[str, Field(description="Path to the package directory")],
+    package_dir: Annotated[str, Field(description="Path to the package directory")],
     name: Annotated[str, Field(description="Name of the context")],
     description: Annotated[str, Field(description="Description of the context")],
     type: Annotated[
@@ -39,8 +39,8 @@ async def package_add_context(
     """Add a context to a package."""
     try:
         # Validate package directory
-        validate_package_dir(package)
-        pkg_path = Path(package)
+        validate_package_dir(package_dir)
+        pkg_path = Path(package_dir)
 
         # Read current package.yaml
         pkg_data = read_package_yaml(pkg_path)

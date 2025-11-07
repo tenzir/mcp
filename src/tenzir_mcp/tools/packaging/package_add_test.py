@@ -28,16 +28,40 @@ logger = logging.getLogger(__name__)
     },
 )
 async def package_add_test(
-    package: Annotated[str, Field(description="Path to the package directory")],
-    path: Annotated[
+    package_dir: Annotated[str, Field(description="Path to the package directory")],
+    test: Annotated[
         str,
-        Field(description="Path to the test file relative to package tests directory"),
+        Field(description="TQL code written in the test file"),
     ],
-    input: Annotated[list[str], Field(description="TQL pipeline code or input data")],
-    output: Annotated[list[str], Field(description="Expected output lines")],
+    test_file: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Path to the test file relative to package tests directory. If not provided, a default name will be generated.",
+            examples=["ocsf/map.tql", "onboard.tql"],
+        ),
+    ],
+    input: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Input data to feed to the pipeline. Pairs with `output` to define test expectations. Omit when the test generates data inline using TQL operators like `from`.",
+        ),
+    ],
+    output: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Expected output from the pipeline. Pairs with `input` for input/output tests, or used alone when the test generates data inline.",
+        ),
+    ],
     fixtures: Annotated[
         list[str] | None,
-        Field(default=None, description="List of fixture names (optional)"),
+        Field(
+            default=None,
+            description="List of fixture names (optional)",
+            examples=["node", "http"],
+        ),
     ],
     timeout: Annotated[
         int | None,
@@ -48,19 +72,44 @@ async def package_add_test(
         ),
     ],
 ) -> ToolResult:
-    """Add a test to a package."""
+    """Add a test to a package.
+
+    Tests consist of TQL code and optional input/output data. The `input` and `output`
+    parameters work together: `input` provides data fed to the pipeline, and `output`
+    specifies the expected results. Both are optional strings that can contain multiple
+    lines. Provide `output` only if you have it upfront, otherwise use the `run_test`
+    tool with the `update` parameter enabled to generate the test expectation. Omit
+    `input` when tests define data inline in TQL (e.g., using `from {...}` or other
+    data generation operators).
+    """
     try:
+        # Validate required parameters
+        if not package_dir:
+            raise ValueError(
+                "'package_dir' must be provided. Use 'package_create' tool to create a package first."
+            )
+        if not test:
+            raise ValueError("'test' must be provided")
+
         # Validate package directory
-        validate_package_dir(package)
-        pkg_path = Path(package)
+        validate_package_dir(package_dir)
+        pkg_path = Path(package_dir)
 
         # Create tests directory if needed
         tests_dir = pkg_path / "tests"
         tests_dir.mkdir(exist_ok=True)
 
+        # Generate test filename if not provided
+        if not test_file:
+            # Find next available test_NNN.tql filename
+            counter = 1
+            while (tests_dir / f"test_{counter:03d}.tql").exists():
+                counter += 1
+            test_file = f"test_{counter:03d}.tql"
+
         # Build test file path
-        test_file = tests_dir / path
-        test_file.parent.mkdir(parents=True, exist_ok=True)
+        test_file_path = tests_dir / test_file
+        test_file_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Build frontmatter metadata
         metadata: dict[str, int | list[str]] = {}
@@ -72,28 +121,54 @@ async def package_add_test(
         # Generate frontmatter
         frontmatter = generate_frontmatter(metadata)
 
-        # Build test content
-        test_content = frontmatter
-        if input:
-            test_content += "\n".join(input)
+        # Build test file content (frontmatter + TQL code)
+        test_content = frontmatter + test
+        if not test.endswith("\n"):
+            test_content += "\n"
 
         # Write test file
-        test_file.write_text(test_content)
+        test_file_path.write_text(test_content)
 
-        # Create baseline file
-        baseline_file = test_file.with_suffix(".txt")
+        # Create input file if input data is provided
+        input_file = None
+        if input:
+            # Create inputs directory
+            inputs_dir = tests_dir / "inputs"
+            inputs_dir.mkdir(exist_ok=True)
+
+            # Derive input filename from test path (e.g., foo/bar.tql -> inputs/foo/bar.txt)
+            input_file = inputs_dir / Path(test_file).with_suffix(".txt")
+            input_file.parent.mkdir(parents=True, exist_ok=True)
+
+            input_content = input
+            if not input_content.endswith("\n"):
+                input_content += "\n"
+            input_file.write_text(input_content)
+
+        # Create output (baseline) file
+        baseline_file = test_file_path.with_suffix(".txt")
         if output:
-            baseline_content = "\n".join(output) + "\n"
+            baseline_content = output
+            if not baseline_content.endswith("\n"):
+                baseline_content += "\n"
             baseline_file.write_text(baseline_content)
 
         result = {
-            "test_path": str(test_file),
-            "baseline_path": str(baseline_file) if output else None,
-            "summary": f"Added test {path} to package",
+            "test_file": str(test_file_path),
+            "input_file": str(input_file) if input_file else None,
+            "baseline_file": str(baseline_file) if output else None,
+            "package_dir": str(pkg_path),
+            "generated_test_name": test_file,
+            "input": input,
+            "output": output,
+            "fixtures": fixtures,
+            "timeout": timeout,
         }
 
         # Format as markdown
-        content = f"# Test Added\n\n**Path**: `{test_file}`\n"
+        content = f"# Test added\n\n**Path**: `{test_file_path}`\n"
+        if input_file and input_file.exists():
+            content += f"**Input**: `{input_file}`\n"
         if baseline_file.exists():
             content += f"**Baseline**: `{baseline_file}`\n"
 

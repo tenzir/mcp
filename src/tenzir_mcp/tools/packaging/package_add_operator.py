@@ -25,8 +25,14 @@ logger = logging.getLogger(__name__)
     },
 )
 async def package_add_operator(
-    package: Annotated[str, Field(description="Path to the package directory")],
-    name: Annotated[str, Field(description="Name of the operator")],
+    package_dir: Annotated[str, Field(description="Path to the package directory")],
+    name: Annotated[
+        str,
+        Field(
+            description="Name of the operator. Supports nested namespaces using '::' separator (e.g., 'parse', 'ocsf::logs::firewall')",
+            examples=["parse", "to_ocsf", "ocsf::logs::my_log_type"],
+        ),
+    ],
     description: Annotated[
         str, Field(description="Description of what the operator does")
     ],
@@ -42,16 +48,24 @@ async def package_add_operator(
     """Add a user-defined operator (UDO) to a package."""
     try:
         # Validate package directory
-        pkg_data = validate_package_dir(package)
-        pkg_path = Path(package)
+        pkg_data = validate_package_dir(package_dir)
+        pkg_path = Path(package_dir)
         package_id = pkg_data.get("id", pkg_path.name)
 
-        # Create operators directory if it doesn't exist
+        # Parse operator name for nested structure
+        # Convert :: separators to path separators
+        name_parts = name.split("::")
+        operator_name = name_parts[-1]  # Last part is the actual operator name
+        namespace_parts = name_parts[:-1]  # Everything before is namespace
+
+        # Create operators directory with nested structure
         operators_dir = pkg_path / "operators"
-        operators_dir.mkdir(exist_ok=True)
+        for part in namespace_parts:
+            operators_dir = operators_dir / part
+        operators_dir.mkdir(parents=True, exist_ok=True)
 
         # Write operator file
-        operator_file = operators_dir / f"{name}.tql"
+        operator_file = operators_dir / f"{operator_name}.tql"
         operator_file.write_text(code)
 
         # Fully qualified operator name
@@ -63,7 +77,9 @@ async def package_add_operator(
             tests_dir = pkg_path / "tests"
             tests_dir.mkdir(exist_ok=True)
 
-            test_file = tests_dir / f"test-{name}.tql"
+            # Flatten nested name with dashes for test file
+            test_name = name.replace("::", "-")
+            test_file = tests_dir / f"test-{test_name}.tql"
             if not test_file.exists():
                 # Create basic test scaffold
                 test_content = f"""---
