@@ -79,9 +79,17 @@ properly typed.
    - **Subnets**: TQL has first-class subnet types; a `subnet` literal has
      the form `10.0.0.0/8` as opposed to `"10.0.0.0/8"`. Ensure that all
      CIDR subnets are parsed as `subnet` type.
+   - **Strings**: Clean string artifacts with the `trim` function.
    - **Lists**: Parse comma-separated values surrounded by brackets as lists.
    - **Nested structures**: Parse nested structures using the `parse_*`
      functions according to the value format.
+   - **Sentinel values**: Use the `replace` operator to normalize sentinel
+     values, such as:
+     ```tql
+     replace what="None", with=null
+     replace what="N/A", with=null
+     replace fieldname, what="NO", with=false
+     ```
 2. Re-run `run_test` and observe the output diff.
 3. If the diff looks good, call `run_test` with `update` enabled.
 4. Go back to Step 1 and continue with the next modification.

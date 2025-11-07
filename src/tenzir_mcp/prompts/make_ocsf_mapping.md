@@ -53,8 +53,9 @@ You MUST state "Phase 1 complete" before proceeding.
         3. Context
         4. Primary
         5. Profiles
-     6. Epilogue
-   - Each section should start with a comment like this:
+     3. Epilogue
+   - Each section should start with a comment like this, surrounded by an empty
+     newline on each side:
      ```tql
      // --- Preamble ---------------------------------
      // --- OCSF: Classification ---------------------
