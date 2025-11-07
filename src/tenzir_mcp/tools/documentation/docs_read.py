@@ -31,7 +31,13 @@ async def docs_read(
         ),
     ],
 ) -> ToolResult:
-    """Read documentation content from the embedded Tenzir documentation."""
+    """Read documentation content from the embedded Tenzir documentation.
+
+    Use this tool to:
+    - Read operator documentation BEFORE using any TQL operator
+    - Read function documentation BEFORE using any TQL function
+    - Study tutorials and guides for learning workflows
+    """
     try:
         clean_path = path.strip("/")
 

@@ -25,9 +25,17 @@ logger = logging.getLogger(__name__)
     },
 )
 async def ocsf_get_classes(
-    version: Annotated[str, Field(description="OCSF schema version (e.g., '1.3.0')")],
+    version: Annotated[str, Field(description="OCSF schema version (e.g., '1.6.0')")],
 ) -> ToolResult:
-    """Get all OCSF event classes and their descriptions for a specific schema version."""
+    """Get all OCSF event classes and their descriptions for a specific schema version.
+
+    Use this tool to:
+    - Browse available OCSF event classes before creating a mapping
+    - Identify which class best matches your log data
+    - Understand the purpose and scope of each event class
+
+    Once you identify a candidate class, use `ocsf_get_class` to see its
+    complete schema with all fields and attributes."""
     try:
         schema = load_ocsf_schema(version)
 

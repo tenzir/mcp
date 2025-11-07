@@ -74,14 +74,15 @@ async def package_add_test(
 ) -> ToolResult:
     """Add a test to a package.
 
-    Tests consist of TQL code and optional input/output data. The `input` and `output`
-    parameters work together: `input` provides data fed to the pipeline, and `output`
-    specifies the expected results. Both are optional strings that can contain multiple
-    lines. Provide `output` only if you have it upfront, otherwise use the `run_test`
-    tool with the `update` parameter enabled to generate the test expectation. Omit
-    `input` when tests define data inline in TQL (e.g., using `from {...}` or other
-    data generation operators).
-    """
+    Use this tool to:
+    - Create test cases for your operators
+    - Define expected behavior with input/output pairs
+    - Set up integration tests with fixtures (e.g., embedded Tenzir nodes)
+    - Generate test scaffolds to be populated later with run_test
+
+    Tests use the tenzir-test framework. Provide input/output when known,
+    or omit output and use the `run_test` tool with `update=True` to generate
+    baselines from actual execution."""
     try:
         # Validate required parameters
         if not package_dir:

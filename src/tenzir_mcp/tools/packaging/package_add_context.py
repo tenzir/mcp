@@ -36,7 +36,14 @@ async def package_add_context(
         str, Field(description="The context type (e.g., 'lookup-table', 'geoip')")
     ],
 ) -> ToolResult:
-    """Add a context to a package."""
+    """Add a context to a package.
+
+    Use this tool to:
+    - Declare lookup tables for enrichment (e.g., threat intel, asset inventory)
+    - Define GeoIP contexts for IP address geolocation
+
+    Contexts are defined in package.yaml and pipelines must populate them
+    separately."""
     try:
         # Validate package directory
         validate_package_dir(package_dir)

@@ -52,9 +52,14 @@ async def run_test(
 ) -> ToolResult:
     """Run tests for TQL pipelines using the tenzir-test framework.
 
-    This tool executes tests against baseline outputs, supports fixtures for shared
-    resources (like embedded nodes), and can run individual tests, directories, or
-    entire test suites.
+    Use this tool to:
+    - Verify package operators work correctly
+    - Run regression tests after making changes
+    - Generate test baselines (with update=True)
+    - Debug failing tests (with passthrough=True)
+
+    Tests can include fixtures like embedded Tenzir nodes for integration testing.
+    The `selection` parameter accepts files, directories, or an empty list for all tests.
     """
     # Elicit confirmation for update mode
     if update and ctx:

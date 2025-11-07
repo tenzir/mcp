@@ -45,7 +45,16 @@ async def package_add_operator(
         ),
     ],
 ) -> ToolResult:
-    """Add a user-defined operator (UDO) to a package."""
+    """Add a user-defined operator (UDO) to a package.
+
+    Use this tool to:
+    - Add custom TQL operators to your package
+    - Organize operators using nested namespaces (e.g., 'ocsf::logs::firewall')
+    - Create parsers, transformations, or OCSF mappings as reusable operators
+    - Automatically generate test scaffolds for new operators
+
+    Operators become available as package_id::operator_name in TQL pipelines
+    after the package is installed."""
     try:
         # Validate package directory
         pkg_data = validate_package_dir(package_dir)

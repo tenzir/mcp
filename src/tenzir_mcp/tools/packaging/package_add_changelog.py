@@ -32,7 +32,16 @@ async def package_add_changelog(
     ],
     description: Annotated[str, Field(description="Description of the change")],
 ) -> ToolResult:
-    """Add a changelog entry to a package."""
+    """Add a changelog entry to a package.
+
+    Use this tool to:
+    - Document changes to your package
+    - Track breaking changes, new features, bug fixes, and general changes
+    - Maintain a history of package evolution
+    - Communicate updates to package users
+
+    Changelog entries are timestamped and categorized. They help users
+    understand what changed between package versions."""
     try:
         # Validate type
         valid_types = ["breaking", "change", "bugfix", "feature"]

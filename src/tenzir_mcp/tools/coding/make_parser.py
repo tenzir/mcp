@@ -30,11 +30,20 @@ async def make_parser(
 ) -> ToolResult:
     """Generate a TQL parser for the given log format.
 
-    Use this tool when you need to parse structured or semi-structured logs into
-    a well-typed schema. Provide sample log events, and this tool will guide you
-    through creating a complete parser package with tests. Ideal for building
-    parsers for logs (e.g., firewall logs, application logs, security events).
-    """
+    Use this tool when:
+    - You have sample log events and need to parse them into structured data
+    - You're starting a new parser for JSON, CSV, syslog, or key-value logs
+    - You want guidance on format detection and TQL operator selection
+    - You need to infer types and create proper schema transformations
+
+    This tool provides a complete workflow with step-by-step instructions for:
+    1. Analyzing log format and structure
+    2. Selecting appropriate TQL operators
+    3. Generating parsing code with type conversions
+    4. Creating a package with the parser
+    5. Testing the parser with sample data
+
+    Follow the workflow instructions provided in the response."""
     try:
         # Read the instructions from prompts directory
         prompt_file = Path(__file__).parent.parent.parent / "prompts" / "make_parser.md"

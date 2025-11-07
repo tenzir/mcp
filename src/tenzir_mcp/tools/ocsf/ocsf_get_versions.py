@@ -41,7 +41,15 @@ def list_ocsf_versions() -> list[str]:
     },
 )
 async def ocsf_get_versions() -> ToolResult:
-    """List all bundled OCSF schema versions."""
+    """List all bundled OCSF schema versions.
+
+    Use this tool to:
+    - See which OCSF schema versions are available
+    - Choose a specific version for your mapping work
+    - Understand schema evolution across versions
+
+    Typically you'll want to use `ocsf_get_latest_version` instead to get
+    the most recent stable version automatically."""
     versions = list_ocsf_versions()
     return ToolResult(
         content="\n".join([f"- {v}" for v in versions]),  # Markdown list

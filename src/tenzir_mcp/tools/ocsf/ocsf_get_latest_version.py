@@ -42,7 +42,15 @@ def latest_stable_ocsf_version() -> str:
     },
 )
 async def ocsf_get_latest_version() -> ToolResult:
-    """Return the latest stable OCSF schema version."""
+    """Return the latest stable OCSF schema version.
+
+    Use this tool to:
+    - Get the current recommended OCSF version for new mappings
+    - Ensure you're using up-to-date schema definitions
+    - Start OCSF mapping workflows with the latest standard
+
+    This filters out development versions (alpha, beta, rc) and returns
+    only stable releases."""
     version = latest_stable_ocsf_version()
     return ToolResult(
         content=f"Latest OCSF version: {version}",  # Human-readable

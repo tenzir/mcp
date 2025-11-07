@@ -70,11 +70,16 @@ async def docs_search(
         ),
     ] = None,
 ) -> ToolResult:
-    """
-    Search documentation by keyword or retrieve specific paths with 'See Also' expansion.
+    """Search documentation by keyword or retrieve specific paths with 'See Also' expansion.
 
-    Provide either 'query' to search, or 'paths' to retrieve specific documents.
-    Use 'depth' > 0 to follow 'See Also' links and discover related documentation.
+    Use this tool to:
+    - Find operators or functions by keyword or query phrase
+    - Discover related documentation through 'See Also' links (`depth` > 0)
+    - Explore specific documentation areas (`search_type` filter)
+    - Learn about unfamiliar concepts or workflows
+
+    The depth parameter traverses cross-references, helping you discover
+    operators and functions you might not have known about.
     """
     if depth < 0:
         error_msg = "Depth must not be negative."

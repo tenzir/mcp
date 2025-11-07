@@ -35,7 +35,16 @@ async def package_create(
     ],
     ctx: Any = None,
 ) -> ToolResult:
-    """Create a new Tenzir package scaffold."""
+    """Create a new Tenzir package scaffold.
+
+    Use this tool to:
+    - Start a new Tenzir package project
+    - Set up the standard directory structure for operators, tests, and documentation
+    - Initialize package metadata (ID, name, author, description)
+
+    This creates the foundation for building custom TQL operators, parsers,
+    and OCSF mappings. After creation, use `package_add_operator` to add
+    functionality and `package_add_test` to add tests."""
     try:
         pkg_path = Path(package_dir).resolve()
 

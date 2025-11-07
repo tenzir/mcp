@@ -30,12 +30,13 @@ async def make_ocsf_mapping(
 ) -> ToolResult:
     """Add OCSF mapping to a TQL parsing pipeline.
 
-    Use this tool when you have a parser that produces structured events and want to
-    map them to the OCSF (Open Cybersecurity Schema Framework) format. This tool guides
-    you through identifying the appropriate OCSF class, creating the mapping operator,
-    and testing the complete pipeline. Ideal for security data standardization and
-    interoperability.
-    """
+    Use this tool when:
+    - You need to map security logs to the OCSF standard
+    - You're normalizing data from multiple sources into a common schema
+    - You want to make your data compatible with OCSF-aware tools
+    - You need guidance on OCSF class selection and field mapping
+
+    Follow the workflow instructions provided in the response."""
     try:
         # Read the instructions from prompts directory
         prompt_file = (

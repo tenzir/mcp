@@ -25,12 +25,21 @@ logger = logging.getLogger(__name__)
     },
 )
 async def ocsf_get_class(
-    version: Annotated[str, Field(description="OCSF schema version (e.g., '1.3.0')")],
+    version: Annotated[str, Field(description="OCSF schema version (e.g., '1.6.0')")],
     name: Annotated[
         str, Field(description="OCSF class name (e.g., 'security_finding')")
     ],
 ) -> ToolResult:
-    """Get the complete definition of a specific OCSF event class including all fields and metadata."""
+    """Get the complete definition of a specific OCSF event class including all fields and metadata.
+
+    Use this tool to:
+    - Understand the full schema of an OCSF event class before mapping
+    - See required vs optional fields
+    - Discover nested object structures and their field definitions
+    - Validate that your source data can map to the class
+
+    This returns the complete class definition including all attributes, types,
+    and constraints needed to create accurate OCSF mappings."""
     try:
         schema = load_ocsf_schema(version)
 

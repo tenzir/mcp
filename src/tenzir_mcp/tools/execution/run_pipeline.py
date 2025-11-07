@@ -128,7 +128,16 @@ async def run_pipeline(
         ),
     ],
 ) -> ToolResult:
-    """Execute a TQL pipeline through the local `tenzir` binary."""
+    """Execute a TQL pipeline through the local `tenzir` binary.
+
+    Use this tool to:
+    - Test TQL code before adding it to a package
+    - Debug pipeline behavior with sample data
+    - Verify operator syntax and semantics
+    - Iterate quickly on pipeline development
+
+    The pipeline runs with diagnostics enabled, providing detailed error messages
+    and warnings to help troubleshoot issues."""
     request = PipelineRequest(
         pipeline=pipeline,
         is_file=is_file,

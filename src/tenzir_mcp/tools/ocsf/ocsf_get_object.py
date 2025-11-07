@@ -30,7 +30,16 @@ async def ocsf_get_object(
         str, Field(description="OCSF object name (e.g., 'email', 'file', 'process')")
     ],
 ) -> ToolResult:
-    """Get the complete definition of an OCSF object type including all fields and metadata."""
+    """Get the complete definition of an OCSF object type including all fields and metadata.
+
+    Use this tool to:
+    - Understand complex nested object structures in OCSF classes
+    - See the fields and types within objects like 'file', 'process', 'user'
+    - Map source data to nested OCSF structures correctly
+    - Reference when constructing TQL operators for OCSF mapping
+
+    Objects are reusable components within OCSF event classes, defining
+    standard structures like endpoints, files, processes, etc."""
     try:
         schema = load_ocsf_schema(version)
 
