@@ -688,6 +688,18 @@ wheels = [
 ]
 
 [[package]]
+name = "mdformat"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "markdown-it-py" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/3f/05/32b5e14b192b0a8a309f32232c580aefedd9d06017cb8fe8fce34bec654c/mdformat-1.0.0.tar.gz", hash = "sha256:4954045fcae797c29f86d4ad879e43bb151fa55dbaf74ac6eaeacf1d45bb3928", size = 56953, upload-time = "2025-10-16T12:05:03.695Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/54/9a/8fe71b95985ca7a4001effbcc58e5a07a1f2a2884203f74dcf48a3b08315/mdformat-1.0.0-py3-none-any.whl", hash = "sha256:bca015d65a1d063a02e885a91daee303057bc7829c2cd37b2075a50dbb65944b", size = 53288, upload-time = "2025-10-16T12:05:02.607Z" },
+]
+
+[[package]]
 name = "mdurl"
 version = "0.1.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1339,6 +1351,22 @@ wheels = [
 ]
 
 [[package]]
+name = "tenzir-changelog"
+version = "0.7.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "mdformat" },
+    { name = "packaging" },
+    { name = "pyyaml" },
+    { name = "rich" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/8a/5b/52bb7926afb87333601ff2c8e5fca81856715f97841829285c7d1693b173/tenzir_changelog-0.7.0.tar.gz", hash = "sha256:d548b857b40d38101f9064605b6ad6b418104710f34209c4e7ad13634cc04eab", size = 61502, upload-time = "2025-11-09T20:41:41.13Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4a/b2/639bfcc8040a7b32e1203df1aa8021fa2b09b450e3f73868130bed68c94d/tenzir_changelog-0.7.0-py3-none-any.whl", hash = "sha256:01c2bd1b5cc98feddc78ab3335cdbeb96c75b59d4c4428f40f599d83f2e66916", size = 46344, upload-time = "2025-11-09T20:41:39.939Z" },
+]
+
+[[package]]
 name = "tenzir-mcp"
 version = "0.3.1"
 source = { editable = "." }
@@ -1347,6 +1375,7 @@ dependencies = [
     { name = "httpx" },
     { name = "pydantic" },
     { name = "python-dotenv" },
+    { name = "tenzir-changelog" },
     { name = "tenzir-test" },
 ]
 
@@ -1368,6 +1397,7 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.25.0" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
+    { name = "tenzir-changelog", specifier = ">=0.7.0" },
     { name = "tenzir-test", specifier = ">=0.12.0" },
 ]
 

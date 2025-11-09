@@ -1,12 +1,12 @@
 """Package changelog management tool."""
 
 import logging
-from datetime import datetime
 from pathlib import Path
 from typing import Annotated
 
 from fastmcp.tools.tool import ToolResult
 from pydantic import Field
+from tenzir_changelog import Changelog  # type: ignore[import-untyped]
 
 from tenzir_mcp.server import mcp
 from tenzir_mcp.tools.packaging._helpers import validate_package_dir
@@ -43,12 +43,12 @@ async def package_add_changelog(
     Changelog entries are timestamped and categorized. They help users
     understand what changed between package versions."""
     try:
-        # Validate type
-        valid_types = ["breaking", "change", "bugfix", "feature"]
-        if type not in valid_types:
-            error_msg = (
-                f"Invalid type '{type}'. Must be one of: {', '.join(valid_types)}"
-            )
+        # Validate entry type
+        valid_types = ("breaking", "change", "bugfix", "feature")
+        normalized_type = type.strip().lower()
+        if normalized_type not in valid_types:
+            allowed = ", ".join(valid_types)
+            error_msg = f"Invalid type '{type}'. Must be one of: {allowed}"
             return ToolResult(
                 content=f"Error: {error_msg}", structured_content={"error": error_msg}
             )
@@ -57,24 +57,36 @@ async def package_add_changelog(
         validate_package_dir(package_dir)
         pkg_path = Path(package_dir)
 
-        # Create changelog directory if needed
-        changelog_dir = pkg_path / "changelog"
-        changelog_dir.mkdir(exist_ok=True)
+        entry_body = description.strip()
+        if not entry_body:
+            error_msg = "Description cannot be empty."
+            return ToolResult(
+                content=f"Error: {error_msg}", structured_content={"error": error_msg}
+            )
 
-        # Generate filename with timestamp
-        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-        entry_file = changelog_dir / f"{type}-{timestamp}.md"
+        entry_title = _derive_entry_title(entry_body)
 
-        # Write changelog entry
-        entry_file.write_text(description + "\n")
+        changelog_client = Changelog(root=pkg_path)
+        entry_file = changelog_client.add(
+            title=entry_title,
+            entry_type=normalized_type,
+            description=entry_body,
+        )
 
         result = {
             "entry_file": str(entry_file),
-            "type": type,
-            "summary": f"Added {type} changelog entry",
+            "type": normalized_type,
+            "title": entry_title,
+            "summary": f"Added {normalized_type} changelog entry",
         }
 
-        content = f"# Changelog Entry Added\n\n**Type**: `{type}`\n**File**: `{entry_file}`\n**Description**: {description}"
+        content = (
+            "# Changelog Entry Added\n\n"
+            f"**Type**: `{normalized_type}`\n"
+            f"**Title**: {entry_title}\n"
+            f"**File**: `{entry_file}`\n"
+            f"**Description**: {description}"
+        )
         return ToolResult(content=content, structured_content=result)
 
     except ValueError as e:
@@ -88,3 +100,13 @@ async def package_add_changelog(
         return ToolResult(
             content=f"Error: {error_msg}", structured_content={"error": error_msg}
         )
+
+
+def _derive_entry_title(description: str) -> str:
+    """Use the first non-empty line as the title, trimmed for brevity."""
+
+    for raw_line in description.splitlines():
+        candidate = raw_line.strip()
+        if candidate:
+            return candidate[:120]
+    return "Changelog update"
