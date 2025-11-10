@@ -20,10 +20,10 @@ You MUST state "Phase 0 complete" before proceeding.
    understand available fields in the to-be-mapped event(s).
 2. You may use the `ocsf_get_latest_version` tool to determine the current OCSF
    version.
-3. Use the `ocsf_get_classes` tool to list all available OCSF classes and the
-   most appropriate OCSF event class based on the data type (e.g., Network
-   Activity, File Activity, Authentication, System Activity). Do not map to a
-   deprecated class!
+3. Use the `ocsf_get_classes` tool to list all available OCSF event classes to
+   identify the most appropriate OCSF event class based on the data type (e.g.,
+   Network Activity, File Activity, Authentication, System Activity). Do not map
+   to a deprecated class!
 4. Document which OCSF attribute groups will be populated (e.g., Actor, Device,
    Network, File)
 5. Identify needed profiles to achieve mapping completeness (e.g., Host, OSINT,
