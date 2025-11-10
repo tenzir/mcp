@@ -1,5 +1,7 @@
 """Package changelog management tool."""
 
+from __future__ import annotations
+
 import logging
 from pathlib import Path
 from typing import Annotated
@@ -31,6 +33,13 @@ async def package_add_changelog(
         str, Field(description="The entry type: breaking, change, bugfix, or feature")
     ],
     description: Annotated[str, Field(description="Description of the change")],
+    author: Annotated[
+        str | None,
+        Field(
+            description="GitHub handle to attribute the entry to. Leave unset to use the changelog default.",
+            default=None,
+        ),
+    ],
 ) -> ToolResult:
     """Add a changelog entry to a package.
 
@@ -71,6 +80,7 @@ async def package_add_changelog(
             title=entry_title,
             entry_type=normalized_type,
             description=entry_body,
+            authors=(author,) if author else None,
         )
 
         result = {
