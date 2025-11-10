@@ -17,11 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
-        exclude:
-          # Exclude some combinations to save CI time
-          - os: macos-latest
-            python-version: "3.10"
+        python-version: ["3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v4
@@ -44,6 +40,14 @@ jobs:
           uv run python scripts/download-docs.py
         env:
           GITHUB_TOKEN: ${{ secrets.TENZIR_BOT_GITHUB_TOKEN }}
+
+      - name: Build documentation index
+        run: |
+          uv run python scripts/build_doc_index.py
+
+      - name: Build documentation database
+        run: |
+          uv run python scripts/build_doc_db.py
 
       - name: Lint with ruff
         run: |
@@ -79,6 +83,24 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: |
+          uv sync --all-extras --dev
+
+      - name: Download documentation
+        run: |
+          uv run python scripts/download-docs.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.TENZIR_BOT_GITHUB_TOKEN }}
+
+      - name: Build documentation index
+        run: |
+          uv run python scripts/build_doc_index.py
+
+      - name: Build documentation database
+        run: |
+          uv run python scripts/build_doc_db.py
 
       - name: Build package
         run: |

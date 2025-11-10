@@ -20,7 +20,7 @@ For a complete list of commands, run `make help`.
 
 ### Prerequisites
 
-- Python 3.10 or higher
+- Python 3.12 or higher
 - [uv](https://github.com/astral-sh/uv) package manager
 
 ### Running from Source
