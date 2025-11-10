@@ -1352,7 +1352,7 @@ wheels = [
 
 [[package]]
 name = "tenzir-changelog"
-version = "0.7.0"
+version = "0.8.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -1361,9 +1361,9 @@ dependencies = [
     { name = "pyyaml" },
     { name = "rich" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8a/5b/52bb7926afb87333601ff2c8e5fca81856715f97841829285c7d1693b173/tenzir_changelog-0.7.0.tar.gz", hash = "sha256:d548b857b40d38101f9064605b6ad6b418104710f34209c4e7ad13634cc04eab", size = 61502, upload-time = "2025-11-09T20:41:41.13Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7f/b6/cdac468c1542f5634a5bb4eeacfee5d9bfab74941dd75237d00f36868236/tenzir_changelog-0.8.1.tar.gz", hash = "sha256:2f39c60a644c6cbde0344f58b67ce7697df679491b5fb41a87a2fe811a7f1430", size = 63997, upload-time = "2025-11-10T07:43:44.037Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4a/b2/639bfcc8040a7b32e1203df1aa8021fa2b09b450e3f73868130bed68c94d/tenzir_changelog-0.7.0-py3-none-any.whl", hash = "sha256:01c2bd1b5cc98feddc78ab3335cdbeb96c75b59d4c4428f40f599d83f2e66916", size = 46344, upload-time = "2025-11-09T20:41:39.939Z" },
+    { url = "https://files.pythonhosted.org/packages/c6/e2/c37def7b87fcb503f897b3d58b87eb168504fbe1e0efe7c92f92dfa293b8/tenzir_changelog-0.8.1-py3-none-any.whl", hash = "sha256:4105b0b48aef8b85d3cb0fe2f27759f4587f69fc15f17277d2e7efe31f9960ce", size = 47430, upload-time = "2025-11-10T07:43:42.458Z" },
 ]
 
 [[package]]
@@ -1397,7 +1397,7 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.25.0" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
-    { name = "tenzir-changelog", specifier = ">=0.7.0" },
+    { name = "tenzir-changelog", specifier = ">=0.8.1" },
     { name = "tenzir-test", specifier = ">=0.12.0" },
 ]
 

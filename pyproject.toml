@@ -43,7 +43,7 @@ dependencies = [
     "httpx>=0.25.0",
     "python-dotenv>=1.0.0",
     "tenzir-test>=0.12.0",
-    "tenzir-changelog>=0.7.0",
+    "tenzir-changelog>=0.8.1",
 ]
 
 
