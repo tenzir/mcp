@@ -41,14 +41,13 @@ The Tenzir MCP server offers tools in several categories.
 
 - `package_create`: Scaffold new packages with interactive prompts
 - `package_add_operator`: Add user-defined operators (UDOs)
-- `package_add_context`: Add context definitions
 - `package_add_test`: Add test files with frontmatter
 - `package_add_changelog`: Document changes properly
 
 #### Package Development Workflow
 
 1. Create package scaffold with `package_create`
-2. Add operators with `package_add_operator` (and contexts with `package_add_context`)
+2. Add operators with `package_add_operator`
 3. Add tests for each operator with `package_add_test`
 4. Write changelog entries with `package_add_changelog`
 

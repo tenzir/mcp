@@ -48,7 +48,6 @@ Here is an overview of the new tools. For a comprehensive reference, check the
 
 - `package_create`: Scaffold new packages with interactive prompts
 - `package_add_operator`: Add user-defined operators (UDOs)
-- `package_add_context`: Add context definitions
 - `package_add_test`: Add test files with frontmatter
 - `package_add_changelog`: Document changes properly
 

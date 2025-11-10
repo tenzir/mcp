@@ -157,7 +157,6 @@ tenzir-ctl install {package_id}
             "package_id": package_id,
             "next_steps": [
                 "Add operators with package_add_operator",
-                "Add contexts with package_add_context",
                 "Add tests with package_add_test",
                 "Add changelog entries with package_add_changelog",
             ],
@@ -170,7 +169,6 @@ tenzir-ctl install {package_id}
 
 ## Next Steps
 - Add operators with `package_add_operator`
-- Add contexts with `package_add_context`
 - Add tests with `package_add_test`
 - Add changelog entries with `package_add_changelog`"""
 
