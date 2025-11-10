@@ -24,8 +24,9 @@ You MUST state "Phase 0 complete" before proceeding.
    identify the most appropriate OCSF event class based on the data type (e.g.,
    Network Activity, File Activity, Authentication, System Activity). Do not map
    to a deprecated class!
-4. Document which OCSF attribute groups will be populated (e.g., Actor, Device,
-   Network, File)
+4. Document which OCSF attribute groups will be populated (i.e., Classification,
+   Occurence, Context, Primary). For each attribute group, list the fields that
+   you will populate.
 5. Identify needed profiles to achieve mapping completeness (e.g., Host, OSINT,
    Security Control)
 6. Note any gaps in the source data for populating OCSF fields
