@@ -60,7 +60,8 @@ class TenzirPipelineRunner:
                     process.communicate(),
                     timeout=request.max_execution_time,
                 )
-            except TimeoutError:
+            except asyncio.TimeoutError:  # noqa: UP041
+                # asyncio.wait_for raises asyncio-specific TimeoutError
                 process.kill()
                 await process.wait()
                 execution_time = time.time() - start_time
