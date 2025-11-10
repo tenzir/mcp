@@ -61,18 +61,6 @@ async def run_test(
     Tests can include fixtures like embedded Tenzir nodes for integration testing.
     The `selection` parameter accepts files, directories, or an empty list for all tests.
     """
-    # Elicit confirmation for update mode
-    if update and ctx:
-        try:
-            result = await ctx.elicit(
-                message="This will overwrite the test baseline. Continue?",
-                response_type=bool,
-            )
-            if result.action != "accept" or not result.data:
-                raise RuntimeError("Update cancelled by user")
-        except Exception as e:
-            logger.warning(f"Elicitation failed, proceeding without confirmation: {e}")
-
     test_paths = [Path(p) for p in selection]
     root_path = Path(root)
 
