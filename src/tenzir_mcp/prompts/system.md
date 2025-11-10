@@ -84,7 +84,7 @@ the following documentation pages _exactly once_ with the `read_docs` tool:
 - explanations/language/statements/
 - explanations/language/expressions/
 - explanations/language/programs/
-- tutorials/write-idiomatic-tql/
+- tutorials/learn-idiomatic-tql/
 
 ### Error Handling
 
