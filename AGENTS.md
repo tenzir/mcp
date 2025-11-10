@@ -1,14 +1,15 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides AI agent guidance when working with code in this repository.
 
 ## Project Overview
 
 This is a Model Context Protocol (MCP) server for Tenzir that enables AI
-assistants to interact with security data pipelines and map data to the Open
-Cybersecurity Schema Framework (OCSF). The server is built using FastMCP and
-provides tools for executing TQL (Tenzir Query Language) pipelines and working
-with OCSF schemas.
+agents to interact with security data pipelines and map data to the Open
+Cybersecurity Schema Framework (OCSF).
+
+The server is built using FastMCP and provides tools for executing TQL (Tenzir
+Query Language) pipelines and working with OCSF schemas.
 
 ## Prerequisites
 
@@ -70,7 +71,7 @@ Use these Makefile targets for development:
 The server is organized into category-based modules:
 
 1. **server.py** – Entry point that imports all tools and initializes FastMCP.
-2. **prompts/** – System prompts for AI assistants.
+2. **prompts/** – System prompts for AI agents.
    - **system.md** – Main system instructions loaded into FastMCP.
 3. **tools/** – MCP tool implementations organized by category:
    - **execution/** – Pipeline and test execution tools.
