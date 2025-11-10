@@ -18,8 +18,8 @@ You MUST state "Phase 0 complete" before proceeding.
 
 1. Examine the parsed data schema (from the `parse` operator output) to
    understand available fields in the to-be-mapped event(s).
-2. Use the `ocsf_get_latest_version` tool to determine the current OCSF version
-   to target
+2. You may use the `ocsf_get_latest_version` tool to determine the current OCSF
+   version.
 3. Use the `ocsf_get_classes` tool to list all available OCSF classes and the
    most appropriate OCSF event class based on the data type (e.g., Network
    Activity, File Activity, Authentication, System Activity). Do not map to a
