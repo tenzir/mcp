@@ -6,19 +6,12 @@ from importlib import import_module
 
 from fastmcp import FastMCP
 
-
-def _load_system_prompt() -> str:
-    """Load system instructions from prompts/system.md."""
-    from importlib.resources import files
-
-    prompts_pkg = files("tenzir_mcp.prompts")
-    return prompts_pkg.joinpath("system.md").read_text(encoding="utf-8")
-
+from tenzir_mcp.prompts import load_system_prompt
 
 # Shared FastMCP application for all tool registrations.
 mcp = FastMCP(
     name="Tenzir MCP Server",
-    instructions=_load_system_prompt(),
+    instructions=load_system_prompt(),
 )
 
 # Import tool packages so FastMCP registers their tools on startup.
