@@ -5,21 +5,22 @@
 
 A [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server that
 enables AI assistants to interact with [Tenzir](https://tenzir.com)—a data
-pipeline engine for security operations. This MCP server provides tools for
-executing TQL pipelines, working with OCSF schemas, managing packages,
-generating parsers, and exploring documentation.
+pipeline engine for security operations.
+
+This MCP server provides tools for executing pipelines written in the [Tenzir
+Query Language (TQL))](https://docs.tenzir.com/explanations/language), working
+with Open Cybersecurity Schema Framework (OCSF), managing packages, generating parsers, and exploring documentation.
 
 ## ✨ Features
 
-- **Pipeline Execution**: Run TQL (Tenzir Query Language) pipelines and tests
+- **Pipeline Execution**: Run TQL pipelines and tests
 - **Documentation Access**: Search and browse embedded Tenzir documentation with
   cross-reference support
-- **OCSF Integration**: Query and work with Open Cybersecurity Schema Framework
-  definitions
+- **OCSF Integration**: Query and work with OCSF definitions, event classes,
+  objects, and profiles.
 - **Package Management**: Create and manage Tenzir packages with operators,
-  contexts, and tests
-- **Code Generation**: Auto-generate TQL parsers and OCSF mapping packages from
-  sample data
+  pipelines, enrichment contexts, and tests
+- **Code Generation**: Auto-generate TQL parsers and OCSF mapping packages
 
 ## 📦 Installation
 
@@ -39,7 +40,7 @@ uvx tenzir-mcp
 ## 📚 Documentation
 
 - [Setup
-  instructions](https://docs.tenzir.com/guides/mcp-setup/install-mcp-server),
+  instructions](https://docs.tenzir.com/guides/mcp-usage/install-mcp-server),
   including MCP client configurations
 - [Reference](https://docs.tenzir.com/guides/reference/mcp-server),
   including usage and tool overview
