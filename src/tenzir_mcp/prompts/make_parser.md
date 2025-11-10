@@ -48,7 +48,8 @@ next phase.
        pkg::parse
      }
      ```
-4. Use the `run_test` tool to execute the test, with `update` enabled.
+4. Use the `run_test` tool to execute the test, with `update` enabled, to
+   produce an initial baseline.
 
 You MUST state "Phase 2 complete" before proceeding.
 
@@ -64,7 +65,8 @@ You MUST state "Phase 2 complete" before proceeding.
 **Objective**:
 
 Loop with the `run_test` tool until the package has all fields parsed and
-properly typed.
+properly typed. (Do NOT use the `run_pipeline` to execute pipelines during
+package development, as this tool does not have the necessary package context.)
 
 **Steps**:
 
