@@ -1,5 +1,6 @@
 """Documentation search tool with See Also traversal."""
 
+import json
 import logging
 from typing import Annotated, cast
 
@@ -205,8 +206,11 @@ async def docs_search(
             if has_query:
                 summary_parts.append(f"for query '{query.strip() if query else ''}'")
 
+        response_json = json.dumps(response, indent=2, sort_keys=True)
+        content = f"{' '.join(summary_parts)}\n\n```json\n{response_json}\n```"
+
         return ToolResult(
-            content=" ".join(summary_parts),
+            content=content,
             structured_content=response,
         )
     except Exception as exc:

@@ -56,7 +56,14 @@ async def ocsf_get_object(
             if object_name.lower() == name.lower() or object_id.lower() == name.lower():
                 # Format as markdown
                 description = object_data.get("description", "No description")
-                markdown = f"# {object_name}\n\n**ID**: {object_id}\n\n**Description**: {description}\n"
+                schema_json = json.dumps(object_data, indent=2, sort_keys=True)
+                markdown = (
+                    f"# {object_name}\n\n"
+                    f"**ID**: {object_id}\n\n"
+                    f"**Description**: {description}\n\n"
+                    "## Schema\n"
+                    f"```json\n{schema_json}\n```"
+                )
 
                 result = {"id": object_id, "name": object_name, "data": object_data}
                 return ToolResult(

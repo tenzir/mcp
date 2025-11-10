@@ -87,6 +87,8 @@ async def package_add_changelog(
             "entry_file": str(entry_file),
             "type": normalized_type,
             "title": entry_title,
+            "description": entry_body,
+            "author": author,
             "summary": f"Added {normalized_type} changelog entry",
         }
 
@@ -95,7 +97,9 @@ async def package_add_changelog(
             f"**Type**: `{normalized_type}`\n"
             f"**Title**: {entry_title}\n"
             f"**File**: `{entry_file}`\n"
-            f"**Description**: {description}"
+            f"**Author**: {author or 'Changelog default'}\n"
+            f"**Summary**: {result['summary']}\n\n"
+            f"## Description\n{entry_body}"
         )
         return ToolResult(content=content, structured_content=result)
 

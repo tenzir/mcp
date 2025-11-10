@@ -57,13 +57,23 @@ async def docs_read(
 
         for try_path in possible_paths:
             if docs.exists(try_path):
-                content = docs.read_file(try_path)
+                requested_path = path.strip() or "/"
+                normalized_path = clean_path or "index"
+                resolved_content = docs.read_file(try_path)
+                metadata_header = "\n".join(
+                    [
+                        f"**Requested Path**: `{requested_path}`",
+                        f"**Normalized Path**: `{normalized_path}`",
+                        f"**Resolved File**: `{try_path}`",
+                    ]
+                )
+                content = f"{metadata_header}\n\n---\n\n{resolved_content}"
                 return ToolResult(
                     content=content,  # Markdown text for display
                     structured_content={
-                        "path": clean_path or "index",
+                        "path": normalized_path,
                         "resolved_path": try_path,
-                        "content": content,  # Same content for structured access
+                        "content": resolved_content,  # Same content for structured access
                     },
                 )
 

@@ -56,7 +56,14 @@ async def ocsf_get_class(
             if class_name.lower() == name.lower() or class_id.lower() == name.lower():
                 # Format as markdown
                 description = class_data.get("description", "No description")
-                markdown = f"# {class_name}\n\n**ID**: {class_id}\n\n**Description**: {description}\n"
+                schema_json = json.dumps(class_data, indent=2, sort_keys=True)
+                markdown = (
+                    f"# {class_name}\n\n"
+                    f"**ID**: {class_id}\n\n"
+                    f"**Description**: {description}\n\n"
+                    "## Schema\n"
+                    f"```json\n{schema_json}\n```"
+                )
 
                 result = {"id": class_id, "name": class_name, "data": class_data}
                 return ToolResult(

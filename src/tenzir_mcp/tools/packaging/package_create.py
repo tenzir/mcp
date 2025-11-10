@@ -162,15 +162,17 @@ tenzir-ctl install {package_id}
             ],
         }
 
-        content = f"""# Package Created
-
-**Package ID**: `{package_id}`
-**Directory**: `{pkg_path}`
-
-## Next Steps
-- Add operators with `package_add_operator`
-- Add tests with `package_add_test`
-- Add changelog entries with `package_add_changelog`"""
+        next_steps_lines = "\n".join(f"- {step}" for step in result["next_steps"])
+        structure_block = tree or "(empty directory)"
+        content = (
+            "# Package Created\n\n"
+            f"**Package ID**: `{result['package_id']}`\n"
+            f"**Directory**: `{result['directory']}`\n\n"
+            "## Structure\n"
+            f"```\n{structure_block}\n```\n\n"
+            "## Next Steps\n"
+            f"{next_steps_lines}"
+        )
 
         return ToolResult(content=content, structured_content=result)
 

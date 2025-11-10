@@ -110,9 +110,14 @@ from stdin | {full_name}
         }
 
         # Format as markdown
-        content = f"# Operator Added\n\n**Name**: `{full_name}`\n**File**: `{operator_file}`\n"
-        if test_created:
-            content += "\n✓ Test scaffold created"
+        test_status = "Created" if test_created else "Not created"
+        content = (
+            "# Operator Added\n\n"
+            f"**Name**: `{full_name}`\n"
+            f"**File**: `{operator_file}`\n"
+            f"**Summary**: {result['summary']}\n"
+            f"**Test Scaffold**: {test_status}\n"
+        )
 
         return ToolResult(content=content, structured_content=result)
 

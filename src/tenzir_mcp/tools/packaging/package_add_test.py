@@ -166,12 +166,34 @@ async def package_add_test(
             "timeout": timeout,
         }
 
-        # Format as markdown
-        content = f"# Test added\n\n**Path**: `{test_file_path}`\n"
-        if input_file and input_file.exists():
-            content += f"**Input**: `{input_file}`\n"
-        if baseline_file.exists():
-            content += f"**Baseline**: `{baseline_file}`\n"
+        fixtures_value = ", ".join(fixtures) if fixtures else "None"
+        baseline_path = result["baseline_file"] or "Not created"
+        input_path = result["input_file"] or "Not created"
+        timeout_value = result["timeout"] if result["timeout"] is not None else "None"
+
+        details_lines = [
+            f"- Package Directory: `{result['package_dir']}`",
+            f"- Test File: `{result['test_file']}`",
+            f"- Generated Name: `{result['generated_test_name']}`",
+            f"- Input File: `{input_path}`",
+            f"- Baseline File: `{baseline_path}`",
+            f"- Fixtures: {fixtures_value}",
+            f"- Timeout: {timeout_value}",
+        ]
+
+        def format_block(title: str, value: str | None) -> str:
+            if value is None:
+                return f"## {title}\n_None provided_\n"
+            return f"## {title}\n```\n{value}\n```\n"
+
+        content = (
+            "# Test Added\n\n"
+            + "\n".join(details_lines)
+            + "\n\n"
+            + format_block("Input Data", input)
+            + "\n"
+            + format_block("Expected Output", output)
+        )
 
         return ToolResult(content=content, structured_content=result)
 
