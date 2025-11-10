@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
     annotations={
         "title": "Add OCSF mapping to parser",
         "readOnlyHint": False,
-        "idempotentHint": False,
+        "idempotentHint": True,
         "openWorldHint": False,
     },
 )

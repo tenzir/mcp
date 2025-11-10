@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
     annotations={
         "title": "Generate a TQL parser",
         "readOnlyHint": False,
-        "idempotentHint": False,
+        "idempotentHint": True,
         "openWorldHint": False,
     },
 )
