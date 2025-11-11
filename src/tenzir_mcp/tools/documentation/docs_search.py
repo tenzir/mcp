@@ -2,6 +2,7 @@
 
 import json
 import logging
+from functools import lru_cache
 from typing import Annotated, cast
 
 from fastmcp.tools.tool import ToolResult
@@ -13,8 +14,11 @@ from tenzir_mcp.tools.documentation.backends.sqlite import SQLiteSearchBackend
 
 logger = logging.getLogger(__name__)
 
-# Initialize the search backend (can be made configurable later)
-_search_backend = SQLiteSearchBackend()
+
+@lru_cache(maxsize=1)
+def _get_search_backend() -> SQLiteSearchBackend:
+    """Lazily instantiate the search backend to avoid import-time failures."""
+    return SQLiteSearchBackend()
 
 
 @mcp.tool(
@@ -109,7 +113,17 @@ async def docs_search(
         return ToolResult(content=error_msg, structured_content={"error": error_msg})
 
     try:
-        index = _search_backend.get_all_docs()
+        backend = _get_search_backend()
+    except FileNotFoundError as err:
+        error_msg = (
+            "Documentation search is unavailable because the docs database is missing. "
+            "Run 'make update-docs && make build-doc-index && make build-doc-db' to generate it."
+        )
+        logger.warning("docs_search unavailable: %s", err)
+        return ToolResult(content=error_msg, structured_content={"error": error_msg})
+
+    try:
+        index = backend.get_all_docs()
         results: list[dict] = []
 
         if has_paths:
@@ -151,7 +165,7 @@ async def docs_search(
                 doc_types_filter = type_mapping.get(normalized_type, [normalized_type])
 
             # Use backend to search
-            search_results = _search_backend.search(
+            search_results = backend.search(
                 query_value,
                 doc_types=doc_types_filter,
                 limit=max(0, limit - len(results)),

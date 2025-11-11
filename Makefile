@@ -1,4 +1,8 @@
-.PHONY: help install install-dev test test-cov lint format type-check clean build build-doc-index build-doc-db
+.PHONY: help install install-dev test test-cov lint format type-check clean build build-doc-index build-doc-db docs-data
+
+DOCS_DIR := src/tenzir_mcp/data/docs
+DOCS_INDEX := src/tenzir_mcp/data/doc_index.json
+DOCS_DB := src/tenzir_mcp/data/docs.db
 
 help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -53,6 +57,17 @@ build-doc-index:  ## Build documentation index
 build-doc-db: build-doc-index  ## Build SQLite documentation database
 	uv run python scripts/build_doc_db.py
 
+docs-data:  ## Ensure documentation search assets exist
+	@if [ ! -d "$(DOCS_DIR)" ]; then \
+		$(MAKE) update-docs; \
+	fi
+	@if [ ! -f "$(DOCS_INDEX)" ]; then \
+		$(MAKE) build-doc-index; \
+	fi
+	@if [ ! -f "$(DOCS_DB)" ]; then \
+		uv run python scripts/build_doc_db.py; \
+	fi
+
 build: clean  ## Build distribution packages
 	$(MAKE) update-docs
 	$(MAKE) build-doc-index
@@ -65,10 +80,10 @@ publish: check build  ## Publish to PyPI (run checks first)
 	@echo "Publishing to PyPI..."
 	uv publish
 
-dev:  ## Run development server
+dev: docs-data  ## Run development server
 	uv run tenzir-mcp
 
-dev-module:  ## Run as Python module
+dev-module: docs-data  ## Run as Python module
 	uv run python -m tenzir_mcp.server
 
 verify-install:  ## Verify package installation with uvx

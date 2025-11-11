@@ -17,8 +17,8 @@ class SQLiteSearchBackend(SearchBackend):
     """FTS5-powered search backend with BM25 ranking."""
 
     def __init__(self) -> None:
-        self._db_path = self._get_db_path()
         self._conn: sqlite3.Connection | None = None
+        self._db_path = self._get_db_path()
 
     def _get_db_path(self) -> Path:
         """Get path to the SQLite database."""
@@ -236,5 +236,6 @@ class SQLiteSearchBackend(SearchBackend):
 
     def __del__(self) -> None:
         """Close database connection on cleanup."""
-        if self._conn is not None:
-            self._conn.close()
+        conn = getattr(self, "_conn", None)
+        if conn is not None:
+            conn.close()
