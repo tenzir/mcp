@@ -50,7 +50,7 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/tenzir/mcp"
 Repository = "https://github.com/tenzir/mcp"
-Documentation = "https://docs.tenzir.com/mcp"
+Documentation = "https://docs.tenzir.com/reference/mcp-server"
 Source = "https://github.com/tenzir/mcp"
 "Bug Tracker" = "https://github.com/tenzir/mcp/issues"
 
