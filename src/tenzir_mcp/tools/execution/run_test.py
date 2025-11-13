@@ -82,16 +82,26 @@ async def run_test(
     logger.debug(f"stdout_capture has buffer: {hasattr(stdout_capture, 'buffer')}")
     logger.debug(f"stderr_capture has buffer: {hasattr(stderr_capture, 'buffer')}")
 
-    with redirect_stdout(stdout_capture), redirect_stderr(stderr_capture):
-        logger.debug("Calling tenzir_test.execute()")
-        result = execute(
-            tests=test_paths,
-            root=root_path,
-            update=update,
-            passthrough=passthrough,
-            show_summary=True,
-        )
-        logger.debug(f"Test completed with exit code: {result.exit_code}")
+    result = None
+    try:
+        with redirect_stdout(stdout_capture), redirect_stderr(stderr_capture):
+            logger.debug("Calling tenzir_test.execute()")
+            result = execute(
+                tests=test_paths,
+                root=root_path,
+                update=update,
+                passthrough=passthrough,
+                show_summary=True,
+            )
+            logger.debug(f"Test completed with exit code: {result.exit_code}")
+    except SystemExit as e:
+        logger.error(f"Test execution failed with SystemExit: {e}", exc_info=True)
+        exit_code = e.code if isinstance(e.code, int) else 1
+    except Exception as e:
+        logger.error(f"Test execution failed with exception: {e}", exc_info=True)
+        exit_code = 1
+    else:
+        exit_code = result.exit_code if result else 1
 
     # Flush the wrappers and get output from the underlying buffers
     stdout_capture.flush()
@@ -105,16 +115,14 @@ async def run_test(
         output += f"\n{stderr}"
 
     # Format as markdown
-    status = "✓ Passed" if result.exit_code == 0 else "✗ Failed"
-    content = (
-        f"**Status**: {status}\n**Exit Code**: {result.exit_code}\n\n```\n{output}\n```"
-    )
+    status = "✓ Passed" if exit_code == 0 else "✗ Failed"
+    content = f"**Status**: {status}\n**Exit Code**: {exit_code}\n\n```\n{output}\n```"
 
     return ToolResult(
         content=content,  # Markdown formatted output
         structured_content={
-            "exit_code": result.exit_code,
-            "success": result.exit_code == 0,
+            "exit_code": exit_code,
+            "success": exit_code == 0,
             "output": output,
             "passthrough": passthrough,
             "update": update,

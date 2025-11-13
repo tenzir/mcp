@@ -103,6 +103,12 @@ async def package_add_changelog(
         )
         return ToolResult(content=content, structured_content=result)
 
+    except SystemExit as e:
+        error_msg = f"Changelog library failed with SystemExit: {e}"
+        logger.error(error_msg, exc_info=True)
+        return ToolResult(
+            content=f"Error: {error_msg}", structured_content={"error": error_msg}
+        )
     except ValueError as e:
         error_msg = str(e)
         return ToolResult(
