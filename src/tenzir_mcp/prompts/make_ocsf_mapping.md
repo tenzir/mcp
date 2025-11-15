@@ -41,6 +41,8 @@ You MUST state "Phase 1 complete" before proceeding.
 
 **Steps**:
 
+Let `pkg` be the package ID that you chose in Phase 1.
+
 1. Use the `package_add_operator` tool to create a new operator called
    `pkg::ocsf::X` where `X` is the event/log type, e.g., `proxy`, `flow`,
    `process`.
@@ -83,11 +85,16 @@ You MUST state "Phase 1 complete" before proceeding.
    - Pass as `test` parameter the following TQL code:
      ```tql
      from_file f"{env("TENZIR_INPUTS")}/sample.json" {
-       pkg::ocsf::parse // NB: created via make_parser MCP tool call
+       pkg::ocsf::parse
      }
      pkg::ocsf::X
      ocsf::cast
      ```
+     NB:
+     - `pkg::ocsf::parse` was previously created via the `make_parser` tool.
+     - If the log sample has a known format, such as JSON or CSV, use an
+       appropriate file extension, e.g., `sample.json` or `sample.csv` instead of
+       `sample.log`.
 5. From here, loop with the `run_test` tool to execute the test until the
    following conditions are met:
    - All warnings are gone. Note that we added `ocsf::cast` at the end of the

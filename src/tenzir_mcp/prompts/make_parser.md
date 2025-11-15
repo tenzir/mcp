@@ -31,10 +31,11 @@ next phase.
 
 **Steps**:
 
+0. Choose a suitable ID for the package consisting of the vendor and product
+   name, e.g., `fortinet`, `cisco`, `microsoft`. In the instructions, below
+   replace `pkg` with the name you chose.
 1. Use the `package_create` tool to create a package structure for the new
-   parser. For the `package_dir` parameter, choose a root directory that
-   corresponds to the vendor name of the log file, e.g., `fortinet`, `cisco`,
-   `microsoft`—`pkg` in the following instructions.
+   parser. For the `package_dir` parameter, use the chosen package ID.
 2. Use the `package_add_operator` tool to create a new operator called `parse`.
    The sole responsibility of this operator is to convert the input into the
    most structured and type representation possible.
@@ -48,6 +49,10 @@ next phase.
        pkg::parse
      }
      ```
+     NB:
+     - If the log sample has a known format, such as JSON or CSV, use an
+       appropriate file extension, e.g., `sample.json` or `sample.csv` instead of
+       `sample.log`.
 4. Use the `run_test` tool to execute the test, with `update` enabled, to
    produce an initial baseline.
 
