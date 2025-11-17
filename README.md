@@ -42,7 +42,7 @@ uvx tenzir-mcp
 - [Setup
   instructions](https://docs.tenzir.com/guides/mcp-usage/install-mcp-server),
   including MCP client configurations
-- [Reference](https://docs.tenzir.com/guides/reference/mcp-server),
+- [Reference](https://docs.tenzir.com/reference/mcp-server/),
   including usage and tool overview
 
 ## 🧑‍💻 Development
