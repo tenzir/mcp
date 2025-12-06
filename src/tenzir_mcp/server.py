@@ -6,11 +6,11 @@ from importlib import import_module
 
 from fastmcp import FastMCP
 
-from tenzir_mcp.bootstrap import ensure_docs_data
+from tenzir_mcp.bootstrap import ensure_data
 from tenzir_mcp.prompts import load_system_prompt
 
 # Ensure documentation data exists before starting (lazy initialization).
-ensure_docs_data()
+ensure_data()
 
 # Shared FastMCP application for all tool registrations.
 mcp = FastMCP(

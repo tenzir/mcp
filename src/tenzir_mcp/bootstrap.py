@@ -46,15 +46,14 @@ OCSF_EXCLUDE_VERSIONS = ["1.0.0-rc.2", "1.0.0-rc.3"]
 TIMEOUT = 120
 
 
-def ensure_docs_data() -> None:
-    """Ensure documentation and OCSF data exists, building if necessary."""
-    needs_docs = not DB_PATH.exists()
-    needs_ocsf = not OCSF_DIR.exists() or not any(OCSF_DIR.glob("*.json"))
+def ensure_data(*, docs: bool = True, ocsf: bool = True) -> None:
+    """Ensure data exists, building if necessary.
 
-    if not needs_docs and not needs_ocsf:
-        return
-
-    if needs_docs:
+    Args:
+        docs: Whether to ensure documentation exists
+        ocsf: Whether to ensure OCSF schemas exist
+    """
+    if docs and not DB_PATH.exists():
         logger.info("documentation database not found, building...")
         if not DOCS_DIR.exists():
             _download_docs()
@@ -62,8 +61,10 @@ def ensure_docs_data() -> None:
             _build_index()
         _build_database()
 
-    if needs_ocsf:
-        _download_ocsf()
+    if ocsf:
+        needs_ocsf = not OCSF_DIR.exists() or not any(OCSF_DIR.glob("*.json"))
+        if needs_ocsf:
+            _download_ocsf()
 
 
 def _download_docs() -> None:
@@ -612,32 +613,27 @@ def clean() -> None:
         logger.info("nothing to clean")
 
 
-def ensure_docs_only() -> None:
-    """Ensure only documentation exists, building if necessary.
-
-    This is used in CI where OCSF schemas are built separately using the
-    ocsf-server repository directly (faster and more reliable than fetching
-    from the public schema.ocsf.io endpoint).
-    """
-    needs_docs = not DB_PATH.exists()
-
-    if not needs_docs:
-        return
-
-    logger.info("documentation database not found, building...")
-    if not DOCS_DIR.exists():
-        _download_docs()
-    if not INDEX_PATH.exists():
-        _build_index()
-    _build_database()
-
-
 if __name__ == "__main__":
-    import sys
+    import argparse
 
-    if len(sys.argv) > 1 and sys.argv[1] == "clean":
+    parser = argparse.ArgumentParser(description="Bootstrap Tenzir MCP data")
+    parser.add_argument(
+        "--clean", action="store_true", help="Remove all generated data files"
+    )
+    parser.add_argument(
+        "--docs-only",
+        action="store_true",
+        help="Only bootstrap documentation (skip OCSF)",
+    )
+    parser.add_argument(
+        "--ocsf-only",
+        action="store_true",
+        help="Only bootstrap OCSF schemas (skip docs)",
+    )
+
+    args = parser.parse_args()
+
+    if args.clean:
         clean()
-    elif len(sys.argv) > 1 and sys.argv[1] == "--docs-only":
-        ensure_docs_only()
     else:
-        ensure_docs_data()
+        ensure_data(docs=not args.ocsf_only, ocsf=not args.docs_only)
