@@ -35,38 +35,22 @@ jobs:
         run: |
           uv sync --all-extras --dev
 
-      - name: Download documentation
-        run: |
-          uv run python scripts/download-docs.py
+      - name: Bootstrap data
+        run: uv run python -m tenzir_mcp.bootstrap
         env:
+          # Avoids GitHub API rate limiting (60/hr unauthenticated, 5000/hr with token)
           GITHUB_TOKEN: ${{ secrets.TENZIR_BOT_GITHUB_TOKEN }}
 
-      - name: Build documentation index
-        run: |
-          uv run python scripts/build_doc_index.py
-
-      - name: Build documentation database
-        run: |
-          uv run python scripts/build_doc_db.py
-
       - name: Lint with ruff
-        run: |
-          uv run ruff check src tests
+        run: uv run ruff check
         if: matrix.os == 'ubuntu-latest'
 
-      - name: Format check with black
-        run: |
-          uv run black --check src tests
-        if: matrix.os == 'ubuntu-latest'
-
-      - name: Sort imports check with isort
-        run: |
-          uv run isort --check-only src tests
+      - name: Format check with ruff
+        run: uv run ruff format --check
         if: matrix.os == 'ubuntu-latest'
 
       - name: Type check with mypy
-        run: |
-          uv run mypy src
+        run: uv run mypy
         if: matrix.os == 'ubuntu-latest' && matrix.python-version != '3.13'
 
       - name: Test with pytest
@@ -88,19 +72,11 @@ jobs:
         run: |
           uv sync --all-extras --dev
 
-      - name: Download documentation
-        run: |
-          uv run python scripts/download-docs.py
+      - name: Bootstrap data
+        run: uv run python -m tenzir_mcp.bootstrap
         env:
+          # Avoids GitHub API rate limiting (60/hr unauthenticated, 5000/hr with token)
           GITHUB_TOKEN: ${{ secrets.TENZIR_BOT_GITHUB_TOKEN }}
-
-      - name: Build documentation index
-        run: |
-          uv run python scripts/build_doc_index.py
-
-      - name: Build documentation database
-        run: |
-          uv run python scripts/build_doc_db.py
 
       - name: Build package
         run: |

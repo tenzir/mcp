@@ -5,13 +5,13 @@ from __future__ import annotations
 import logging
 import os
 import sys
-from typing import Optional
+from typing import Any, Optional
 
 ICON_MAP = {
-    logging.DEBUG: ("·", "\033[90m"),       # grey
-    logging.INFO: ("✔︎", "\033[32m"),       # green (success-style info)
-    logging.WARNING: ("!", "\033[33m"),     # yellow
-    logging.ERROR: ("✘", "\033[31m"),       # red
+    logging.DEBUG: ("·", "\033[90m"),  # grey
+    logging.INFO: ("✔︎", "\033[32m"),  # green (success-style info)
+    logging.WARNING: ("!", "\033[33m"),  # yellow
+    logging.ERROR: ("✘", "\033[31m"),  # red
     logging.CRITICAL: ("✘", "\033[31m"),
 }
 
@@ -42,7 +42,7 @@ class IconFormatter(logging.Formatter):
         return f"{icon_text} {message}"
 
 
-def _success(self: logging.Logger, msg: str, *args, **kwargs) -> None:
+def _success(self: logging.Logger, msg: str, *args: Any, **kwargs: Any) -> None:
     self.info(msg, *args, **kwargs)
 
 

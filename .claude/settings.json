@@ -1,0 +1,16 @@
+{
+  "extraKnownMarketplaces": {
+    "tenzir": {
+      "source": {
+        "source": "github",
+        "repo": "tenzir/claude-plugins"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "changelog@tenzir": true,
+    "formatter@tenzir": true,
+    "git@tenzir": true,
+    "python@tenzir": true
+  }
+}

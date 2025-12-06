@@ -39,16 +39,17 @@ uvx tenzir-mcp
 
 ## 📚 Documentation
 
-- [Setup
-  instructions](https://docs.tenzir.com/guides/mcp-usage/install-mcp-server),
-  including MCP client configurations
-- [Reference](https://docs.tenzir.com/guides/reference/mcp-server),
-  including usage and tool overview
+Consult our [setup guide](https://docs.tenzir.com/guides/mcp-usage/install-mcp-server)
+for installation and MCP client configuration.
 
-## 🧑‍💻 Development
+We also provide a [reference](https://docs.tenzir.com/reference/mcp-server) that
+explains usage and available tools.
 
-See [DEVELOPMENT.md](DEVELOPMENT.md) for development setup, testing, and
-contributing guidelines.
+## 🤝 Contributing
+
+Want to contribute? We're all-in on agentic coding with [Claude
+Code](https://claude.ai/code)! The repo comes pre-configured with our [custom
+plugins](https://github.com/tenzir/claude-plugins)—just clone and start hacking.
 
 ## 📜 License
 
