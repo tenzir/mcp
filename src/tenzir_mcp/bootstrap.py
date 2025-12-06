@@ -612,10 +612,32 @@ def clean() -> None:
         logger.info("nothing to clean")
 
 
+def ensure_docs_only() -> None:
+    """Ensure only documentation exists, building if necessary.
+
+    This is used in CI where OCSF schemas are built separately using the
+    ocsf-server repository directly (faster and more reliable than fetching
+    from the public schema.ocsf.io endpoint).
+    """
+    needs_docs = not DB_PATH.exists()
+
+    if not needs_docs:
+        return
+
+    logger.info("documentation database not found, building...")
+    if not DOCS_DIR.exists():
+        _download_docs()
+    if not INDEX_PATH.exists():
+        _build_index()
+    _build_database()
+
+
 if __name__ == "__main__":
     import sys
 
     if len(sys.argv) > 1 and sys.argv[1] == "clean":
         clean()
+    elif len(sys.argv) > 1 and sys.argv[1] == "--docs-only":
+        ensure_docs_only()
     else:
         ensure_docs_data()
