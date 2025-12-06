@@ -37,11 +37,13 @@ OCSF_DIR = DATA_DIR / "ocsf"
 # GitHub configuration for docs
 DOCS_REPO = "https://api.github.com/repos/tenzir/docs"
 DOWNLOAD_URL_TEMPLATE = "https://github.com/tenzir/docs/archive/{}.zip"
-TIMEOUT = 30
 
 # OCSF configuration
 OCSF_SERVER = "https://schema.ocsf.io"
 OCSF_EXCLUDE_VERSIONS = ["1.0.0-rc.2", "1.0.0-rc.3"]
+
+# Network timeout (OCSF server can be slow)
+TIMEOUT = 120
 
 
 def ensure_docs_data() -> None:
