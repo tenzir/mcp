@@ -1,0 +1,5 @@
+created: 2025-12-09
+title: Tenzir MCP Server v0.4.2
+intro: >-
+  This release streamlines the prompts for the `make_parser` and `make_ocsf_mapping`
+  tools, reducing model errors and speeding up agent completion.
