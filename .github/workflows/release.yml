@@ -48,7 +48,7 @@ jobs:
   verify-installation:
     name: Verify installation
     needs: publish-to-pypi
-    if: needs.publish-to-pypi.result == 'success'
+    if: needs.publish-to-pypi.result == 'success' && github.event_name == 'release'
     runs-on: ubuntu-latest
 
     steps:
@@ -58,5 +58,16 @@ jobs:
       - name: Wait for package availability
         run: sleep 30
 
-      - name: Test installation from PyPI
-        run: uvx tenzir-mcp --help
+      - name: Verify correct version on PyPI
+        run: |
+          EXPECTED="${{ github.event.release.tag_name }}"
+          EXPECTED="${EXPECTED#v}"  # Strip 'v' prefix
+          uv pip install --system tenzir-mcp
+          INSTALLED=$(uv pip show tenzir-mcp | grep Version | cut -d' ' -f2)
+          echo "Expected: $EXPECTED"
+          echo "Installed: $INSTALLED"
+          if [ "$INSTALLED" != "$EXPECTED" ]; then
+            echo "::error::Version mismatch! Expected $EXPECTED but got $INSTALLED"
+            exit 1
+          fi
+          echo "Version verified successfully"
