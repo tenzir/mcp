@@ -1,0 +1,68 @@
+name: Test Suite
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: Python version to test with
+        type: string
+        default: "3.12"
+      os:
+        description: Operating system to run on
+        type: string
+        default: ubuntu-latest
+      run-lint:
+        description: Run linting checks
+        type: boolean
+        default: true
+      run-format:
+        description: Run format checks
+        type: boolean
+        default: true
+      run-typecheck:
+        description: Run type checking
+        type: boolean
+        default: true
+    secrets:
+      github-token:
+        description: GitHub token for downloading docs
+        required: true
+
+jobs:
+  test:
+    runs-on: ${{ inputs.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "**/pyproject.toml"
+
+      - name: Set up Python ${{ inputs.python-version }}
+        run: uv python install ${{ inputs.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Bootstrap data
+        uses: ./.github/actions/bootstrap-data
+        with:
+          github-token: ${{ secrets.github-token }}
+
+      - name: Lint with ruff
+        if: inputs.run-lint
+        run: uv run ruff check
+
+      - name: Format check with ruff
+        if: inputs.run-format
+        run: uv run ruff format --check
+
+      - name: Type check with mypy
+        if: inputs.run-typecheck && inputs.python-version != '3.13'
+        run: uv run mypy
+
+      - name: Test with pytest
+        run: uv run pytest

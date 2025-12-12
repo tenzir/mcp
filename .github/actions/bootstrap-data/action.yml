@@ -1,0 +1,19 @@
+name: Bootstrap Data
+description: Bootstrap documentation and OCSF schemas for building/testing
+
+inputs:
+  github-token:
+    description: GitHub token for downloading docs
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Bootstrap documentation
+      shell: bash
+      run: uv run python -m tenzir_mcp.bootstrap --docs-only
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+
+    - name: Build OCSF schemas
+      uses: ./.github/actions/build-ocsf
