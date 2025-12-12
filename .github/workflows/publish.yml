@@ -62,8 +62,9 @@ jobs:
         run: |
           EXPECTED="${{ github.event.release.tag_name }}"
           EXPECTED="${EXPECTED#v}"  # Strip 'v' prefix
-          uv pip install --system tenzir-mcp
-          INSTALLED=$(uv pip show tenzir-mcp | grep Version | cut -d' ' -f2)
+          uv venv /tmp/verify-venv
+          uv pip install --python /tmp/verify-venv tenzir-mcp
+          INSTALLED=$(uv pip show --python /tmp/verify-venv tenzir-mcp | grep Version | cut -d' ' -f2)
           echo "Expected: $EXPECTED"
           echo "Installed: $INSTALLED"
           if [ "$INSTALLED" != "$EXPECTED" ]; then
