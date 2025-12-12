@@ -1,0 +1,6 @@
+created: 2025-12-12
+title: Tenzir MCP Server v0.4.4
+intro: >-
+  This release fixes broken CI/CD workflows that were preventing successful publishing
+  to PyPI. The workflows have been refactored with reusable composite actions and
+  proper version verification after publishing.
