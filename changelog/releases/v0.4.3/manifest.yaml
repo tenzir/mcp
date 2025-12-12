@@ -1,0 +1,7 @@
+created: 2025-12-12
+title: Tenzir MCP Server v0.4.3
+intro: >-
+  This patch release updates the server to use FastMCP's built-in logging infrastructure.
+  The custom file-based logging has been removed, eliminating the creation of `tenzir-mcp.log`
+  files in the working directory. Use `FASTMCP_LOG_LEVEL=DEBUG` for verbose output
+  when troubleshooting.
