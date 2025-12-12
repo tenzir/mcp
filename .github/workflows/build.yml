@@ -1,0 +1,53 @@
+name: Build
+
+on:
+  workflow_call:
+    inputs:
+      check-twine:
+        description: Run twine check on the package
+        type: boolean
+        default: false
+    secrets:
+      github-token:
+        description: GitHub token for downloading docs
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Bootstrap data
+        uses: ./.github/actions/bootstrap-data
+        with:
+          github-token: ${{ secrets.github-token }}
+
+      - name: Build package
+        run: |
+          uv build
+          ls -la dist/
+
+      - name: Check package
+        run: |
+          uv venv
+          uv pip install check-wheel-contents ${{ inputs.check-twine && 'twine' || '' }}
+          uv run check-wheel-contents dist/*.whl
+          ${{ inputs.check-twine && 'uv run twine check dist/*' || '' }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+          retention-days: 7

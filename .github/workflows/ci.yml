@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  # Run test matrix
+  test-ubuntu-312:
+    name: Test Python 3.12 on ubuntu-latest
+    uses: ./.github/workflows/tests.yml
+    with:
+      python-version: "3.12"
+      os: ubuntu-latest
+    secrets:
+      github-token: ${{ secrets.TENZIR_BOT_GITHUB_TOKEN }}
+
+  test-ubuntu-313:
+    name: Test Python 3.13 on ubuntu-latest
+    uses: ./.github/workflows/tests.yml
+    with:
+      python-version: "3.13"
+      os: ubuntu-latest
+      run-typecheck: false # mypy doesn't fully support 3.13 yet
+    secrets:
+      github-token: ${{ secrets.TENZIR_BOT_GITHUB_TOKEN }}
+
+  test-macos-312:
+    name: Test Python 3.12 on macos-latest
+    uses: ./.github/workflows/tests.yml
+    with:
+      python-version: "3.12"
+      os: macos-latest
+      run-lint: false
+      run-format: false
+      run-typecheck: false
+    secrets:
+      github-token: ${{ secrets.TENZIR_BOT_GITHUB_TOKEN }}
+
+  test-macos-313:
+    name: Test Python 3.13 on macos-latest
+    uses: ./.github/workflows/tests.yml
+    with:
+      python-version: "3.13"
+      os: macos-latest
+      run-lint: false
+      run-format: false
+      run-typecheck: false
+    secrets:
+      github-token: ${{ secrets.TENZIR_BOT_GITHUB_TOKEN }}
+
+  build:
+    name: Build distribution
+    needs: [test-ubuntu-312, test-ubuntu-313, test-macos-312, test-macos-313]
+    uses: ./.github/workflows/build.yml
+    secrets:
+      github-token: ${{ secrets.TENZIR_BOT_GITHUB_TOKEN }}
+
+  test-install:
+    name: Test installation on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    needs: build
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Test installation
+        run: uvx --from dist/*.whl tenzir-mcp --help

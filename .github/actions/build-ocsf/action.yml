@@ -1,0 +1,52 @@
+name: Build OCSF Schemas
+description: Build OCSF schemas locally using the official ocsf-server
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Elixir
+      uses: erlef/setup-beam@v1
+      with:
+        elixir-version: "1.17"
+        otp-version: "27"
+
+    - name: Clone OCSF repositories
+      shell: bash
+      run: |
+        git clone --depth 1 https://github.com/ocsf/ocsf-server.git /tmp/ocsf-server
+        git clone https://github.com/ocsf/ocsf-schema.git /tmp/ocsf-schema
+
+    - name: Build OCSF server
+      shell: bash
+      run: |
+        cd /tmp/ocsf-server
+        mix local.hex --force
+        mix local.rebar --force
+        mix deps.get
+        mix compile
+
+    - name: Export OCSF schemas
+      shell: bash
+      run: |
+        cat > /tmp/export_schema.exs << 'EOF'
+        [version, output_path] = System.argv()
+        json = Schema.export_schema() |> Jason.encode!()
+        File.write!(output_path, json)
+        IO.puts("Exported #{version} to #{output_path}")
+        EOF
+
+        OCSF_OUT="${GITHUB_WORKSPACE}/src/tenzir_mcp/data/ocsf"
+        mkdir -p "$OCSF_OUT"
+
+        for tag in v1.0.0 v1.1.0 v1.2.0 1.3.0 1.4.0 1.5.0 1.6.0 1.7.0; do
+          version="${tag#v}"
+          echo "Exporting OCSF $version..."
+          cd /tmp/ocsf-schema && git checkout "$tag" --quiet
+          cd /tmp/ocsf-server
+          SCHEMA_DIR=/tmp/ocsf-schema SCHEMA_EXTENSION=extensions \
+            mix run /tmp/export_schema.exs "$version" "${OCSF_OUT}/${version}.json" \
+            2>/dev/null
+        done
+
+        echo "Exported schemas:"
+        ls -la "$OCSF_OUT"
