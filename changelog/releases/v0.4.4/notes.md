@@ -4,8 +4,6 @@ This release fixes broken CI/CD workflows that were preventing successful publis
 
 ### Fix CI/CD workflows with reusable components
 
-**Components:** `ci`
-
 Fix broken `publish.yml` workflow that referenced removed scripts (`scripts/download-docs.py`, etc.) consolidated into the bootstrap module in commit 923ff37.
 
 **Changes:**
@@ -19,4 +17,4 @@ Fix broken `publish.yml` workflow that referenced removed scripts (`scripts/down
 
 This refactoring eliminates workflow duplication and ensures the release process properly validates before publishing.
 
-*By @mavam and @claude.*
+_By @mavam and @claude._

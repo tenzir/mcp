@@ -2,10 +2,8 @@
 title: Fix CI/CD workflows with reusable components
 type: bugfix
 authors:
-- mavam
-- claude
-components:
-- ci
+  - mavam
+  - claude
 created: 2025-12-12T13:12:03.733058Z
 ---
 
