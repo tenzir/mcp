@@ -1,18 +1,18 @@
 """Tenzir test execution tool using tenzir-test framework."""
 
 import io
-import logging
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from typing import Annotated, Any
 
 from fastmcp.tools.tool import ToolResult
+from fastmcp.utilities.logging import get_logger
 from pydantic import Field
 from tenzir_test import execute
 
 from tenzir_mcp.server import mcp
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @mcp.tool(

@@ -1,18 +1,18 @@
 """Documentation search tool with See Also traversal."""
 
 import json
-import logging
 from functools import lru_cache
 from typing import Annotated, cast
 
 from fastmcp.tools.tool import ToolResult
+from fastmcp.utilities.logging import get_logger
 from pydantic import Field
 
 from tenzir_mcp.docs import build_related_tree, normalize_doc_request
 from tenzir_mcp.server import mcp
 from tenzir_mcp.tools.documentation.backends.sqlite import SQLiteSearchBackend
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @lru_cache(maxsize=1)

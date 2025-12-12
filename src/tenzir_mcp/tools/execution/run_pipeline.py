@@ -1,16 +1,16 @@
 """TQL pipeline execution tool."""
 
 import asyncio
-import logging
 import time
 from typing import Annotated
 
 from fastmcp.tools.tool import ToolResult
+from fastmcp.utilities.logging import get_logger
 from pydantic import BaseModel, Field
 
 from tenzir_mcp.server import mcp
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class PipelineRequest(BaseModel):

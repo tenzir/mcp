@@ -1,15 +1,15 @@
 """Log parser TQL code generator."""
 
-import logging
 from pathlib import Path
 from typing import Annotated, Any
 
 from fastmcp.tools.tool import ToolResult
+from fastmcp.utilities.logging import get_logger
 from pydantic import Field
 
 from tenzir_mcp.server import mcp
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @mcp.tool(

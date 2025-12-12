@@ -1,10 +1,10 @@
 """Package test management tool."""
 
-import logging
 from pathlib import Path
 from typing import Annotated
 
 from fastmcp.tools.tool import ToolResult
+from fastmcp.utilities.logging import get_logger
 from pydantic import Field
 
 from tenzir_mcp.server import mcp
@@ -13,7 +13,7 @@ from tenzir_mcp.tools.packaging._helpers import (
     validate_package_dir,
 )
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @mcp.tool(

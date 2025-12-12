@@ -1,17 +1,17 @@
 """OCSF class definition tool for getting specific event class details."""
 
 import json
-import logging
 from typing import Annotated
 
 from fastmcp.tools.tool import ToolResult
+from fastmcp.utilities.logging import get_logger
 from pydantic import Field
 
 from tenzir_mcp.server import mcp
 
 from ._helpers import load_ocsf_schema
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @mcp.tool(

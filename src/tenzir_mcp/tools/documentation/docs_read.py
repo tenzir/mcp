@@ -1,15 +1,15 @@
 """Documentation reading tool."""
 
-import logging
 from typing import Annotated
 
 from fastmcp.tools.tool import ToolResult
+from fastmcp.utilities.logging import get_logger
 from pydantic import Field
 
 from tenzir_mcp.docs import TenzirDocs
 from tenzir_mcp.server import mcp
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @mcp.tool(
