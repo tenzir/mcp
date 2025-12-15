@@ -1,6 +1,6 @@
 id: mcp
 name: Tenzir MCP Server
-description: >
-  A Model Context Protocol (MCP) server for Tenzir that enables AI agents to
-  interact with Tenzir.
+description: >-
+  A Model Context Protocol (MCP) server that connects AI agents to Tenzir,
+  generates data parsers, and creates OCSF mappings.
 repository: tenzir/mcp
