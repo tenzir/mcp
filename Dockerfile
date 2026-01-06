@@ -1,4 +1,5 @@
 FROM tenzir/tenzir
+ENV TENZIR_BINARY=tenzir
 COPY uv.lock .
 COPY pyproject.toml .
 COPY src src

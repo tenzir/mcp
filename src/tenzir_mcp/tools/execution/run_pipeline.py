@@ -1,6 +1,7 @@
 """TQL pipeline execution tool."""
 
 import asyncio
+import os
 import time
 from typing import Annotated
 
@@ -34,8 +35,15 @@ class PipelineResponse(BaseModel):
 class TenzirPipelineRunner:
     """Handles Tenzir pipeline execution."""
 
-    def __init__(self, tenzir_binary: str = "tenzir") -> None:
-        self.tenzir_binary = tenzir_binary
+    def __init__(self, tenzir_command: list[str] | None = None) -> None:
+        if tenzir_command is None:
+            env_binary = os.environ.get("TENZIR_BINARY")
+            if env_binary:
+                self.tenzir_command = env_binary.split()
+            else:
+                self.tenzir_command = ["uvx", "tenzir"]
+        else:
+            self.tenzir_command = tenzir_command
 
     async def execute_pipeline(self, request: PipelineRequest) -> PipelineResponse:
         """Execute a TQL pipeline."""
@@ -43,7 +51,7 @@ class TenzirPipelineRunner:
 
         try:
             # Prepare command
-            cmd = [self.tenzir_binary, "--dump-diagnostics"]
+            cmd = [*self.tenzir_command, "--dump-diagnostics"]
             if request.is_file:
                 cmd.append("-f")
             cmd.append(request.pipeline)
