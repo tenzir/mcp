@@ -45,3 +45,6 @@ mcp_config.json
 src/tenzir_mcp/data/docs/
 src/tenzir_mcp/data/doc_index.json
 src/tenzir_mcp/data/ocsf/
+
+# Local docs
+.docs/
