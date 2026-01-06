@@ -48,12 +48,14 @@ async def docs_read(
 
         docs = TenzirDocs()
 
-        possible_paths = [
-            f"src/content/docs/{clean_path}.md",
-            f"src/content/docs/{clean_path}.mdx",
-            f"src/content/docs/{clean_path}.mdoc",
-            f"src/content/docs/{clean_path}/index.mdx",
-        ]
+        # Built docs are at {path}.md directly
+        # For index paths like "explanations/index", the file is at "explanations.md"
+        possible_paths = [f"{clean_path}.md"]
+        if clean_path.endswith("/index") or clean_path == "index":
+            # Try parent directory as filename for index pages
+            parent_path = clean_path.rsplit("/index", 1)[0] if "/" in clean_path else ""
+            if parent_path:
+                possible_paths.insert(0, f"{parent_path}.md")
 
         for try_path in possible_paths:
             if docs.exists(try_path):
