@@ -64,7 +64,7 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           # Load image locally for smoke test on PRs
           load: ${{ github.event_name == 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ github.event_name == 'pull_request' && 'tenzir-mcp:test' || steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -72,8 +72,7 @@ jobs:
       - name: Smoke test Docker image
         if: github.event_name == 'pull_request'
         run: |
-          # Get the first tag from metadata
-          IMAGE_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
+          IMAGE_TAG="tenzir-mcp:test"
           echo "Testing image: $IMAGE_TAG"
 
           # Test 1: Verify MCP server can be imported and starts
