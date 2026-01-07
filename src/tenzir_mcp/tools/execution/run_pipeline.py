@@ -1,6 +1,8 @@
 """TQL pipeline execution tool."""
 
 import asyncio
+import os
+import shutil
 import time
 from typing import Annotated
 
@@ -11,6 +13,38 @@ from pydantic import BaseModel, Field
 from tenzir_mcp.server import mcp
 
 logger = get_logger(__name__)
+
+
+def get_tenzir_command() -> list[str]:
+    """Determine the command to run Tenzir.
+
+    Resolution order:
+    1. TENZIR_BINARY environment variable (explicit override)
+    2. tenzir binary (if installed locally)
+    3. uvx tenzir (if uv is available)
+    4. Raise error with helpful message
+    """
+    # 1. Explicit override via environment variable
+    env_binary = os.environ.get("TENZIR_BINARY")
+    if env_binary:
+        return env_binary.split()
+
+    # 2. Local tenzir installation
+    if shutil.which("tenzir"):
+        return ["tenzir"]
+
+    # 3. uvx (uv tool runner)
+    if shutil.which("uvx"):
+        return ["uvx", "tenzir"]
+
+    # 4. Error with helpful message
+    msg = (
+        "No Tenzir installation found. Please either:\n"
+        "  - Install Tenzir: https://docs.tenzir.com/guides/installation/\n"
+        "  - Install uv: https://docs.astral.sh/uv/getting-started/installation/\n"
+        "  - Set TENZIR_BINARY environment variable"
+    )
+    raise RuntimeError(msg)
 
 
 class PipelineRequest(BaseModel):
@@ -34,8 +68,11 @@ class PipelineResponse(BaseModel):
 class TenzirPipelineRunner:
     """Handles Tenzir pipeline execution."""
 
-    def __init__(self, tenzir_binary: str = "tenzir") -> None:
-        self.tenzir_binary = tenzir_binary
+    def __init__(self, tenzir_command: list[str] | None = None) -> None:
+        if tenzir_command is None:
+            self.tenzir_command = get_tenzir_command()
+        else:
+            self.tenzir_command = tenzir_command
 
     async def execute_pipeline(self, request: PipelineRequest) -> PipelineResponse:
         """Execute a TQL pipeline."""
@@ -43,7 +80,7 @@ class TenzirPipelineRunner:
 
         try:
             # Prepare command
-            cmd = [self.tenzir_binary, "--dump-diagnostics"]
+            cmd = [*self.tenzir_command, "--dump-diagnostics"]
             if request.is_file:
                 cmd.append("-f")
             cmd.append(request.pipeline)

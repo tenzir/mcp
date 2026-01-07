@@ -62,7 +62,57 @@ jobs:
           context: .
           # Only push for main branch and releases, not PRs
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
+          # Load image locally for smoke test on PRs
+          load: ${{ github.event_name == 'pull_request' }}
+          tags: ${{ github.event_name == 'pull_request' && 'tenzir-mcp:test' || steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Smoke test Docker image
+        if: github.event_name == 'pull_request'
+        run: |
+          IMAGE_TAG="tenzir-mcp:test"
+          echo "Testing image: $IMAGE_TAG"
+
+          # Test 1: Verify MCP server can be imported and starts
+          docker run --rm "$IMAGE_TAG" --help
+
+          # Test 2: Verify embedded data is present and valid
+          docker run --rm --entrypoint python3 "$IMAGE_TAG" -c "
+          from pathlib import Path
+          import sqlite3
+
+          # Check data directory
+          data_dir = Path('/usr/local/lib/python3.13/dist-packages/tenzir_mcp/data')
+          assert data_dir.exists(), 'Data directory missing'
+
+          # Check docs
+          docs_dir = data_dir / 'docs'
+          assert docs_dir.exists(), 'Docs directory missing'
+          md_files = list(docs_dir.rglob('*.md'))
+          assert len(md_files) > 400, f'Expected >400 docs, got {len(md_files)}'
+          print(f'✓ Documentation: {len(md_files)} files')
+
+          # Check database with cross-links
+          db_file = data_dir / 'docs.db'
+          assert db_file.exists(), 'Database missing'
+          conn = sqlite3.connect(db_file)
+          cursor = conn.cursor()
+          cursor.execute('SELECT COUNT(*) FROM see_also')
+          count = cursor.fetchone()[0]
+          assert count > 1000, f'Expected >1000 cross-links, got {count}'
+          print(f'✓ Cross-links: {count}')
+          conn.close()
+
+          # Check OCSF schemas
+          ocsf_dir = data_dir / 'ocsf'
+          assert ocsf_dir.exists(), 'OCSF directory missing'
+          schemas = list(ocsf_dir.glob('*.json'))
+          assert len(schemas) >= 10, f'Expected >=10 OCSF schemas, got {len(schemas)}'
+          print(f'✓ OCSF schemas: {len(schemas)} versions')
+
+          # Test MCP server imports correctly
+          from tenzir_mcp.server import mcp
+          print('✓ MCP server imports successfully')
+          "

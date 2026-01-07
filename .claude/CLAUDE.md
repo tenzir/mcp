@@ -23,7 +23,7 @@ The server exposes Tenzir functionality through the Model Context Protocol, enab
 
 ## Tool Categories
 
-**Execution** runs TQL pipelines and tests through Tenzir. Requires Tenzir installed and available in PATH.
+**Execution** runs TQL pipelines and tests through Tenzir. Uses `uvx tenzir` by default, configurable via `TENZIR_BINARY` env var.
 
 **Documentation** provides search and retrieval over embedded Tenzir docs with cross-reference support.
 
