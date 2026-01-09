@@ -8,11 +8,11 @@
     }
   },
   "enabledPlugins": {
-    "changelog@tenzir": true,
     "docs@tenzir": true,
     "formatter@tenzir": true,
     "git@tenzir": true,
     "prose@tenzir": true,
-    "python@tenzir": true
+    "python@tenzir": true,
+    "ship@tenzir": true
   }
 }
