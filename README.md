@@ -7,6 +7,11 @@ A [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server that
 enables AI assistants to interact with [Tenzir](https://tenzir.com)—a data
 pipeline engine for security operations.
 
+> [!WARNING]
+> This MCP server is not actively maintained right now.
+> [`tenzir/skills`](https://github.com/tenzir/skills) is superseding it and is
+> where new work is happening.
+
 This MCP server provides tools for executing pipelines written in the [Tenzir
 Query Language (TQL))](https://docs.tenzir.com/explanations/language), working
 with Open Cybersecurity Schema Framework (OCSF), managing packages, generating parsers, and exploring documentation.
